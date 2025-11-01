@@ -3,16 +3,20 @@ import sys
 import json
 import time
 import datetime
+import asyncio
 import requests
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, asdict
 from dotenv import load_dotenv
+from motor.motor_asyncio import AsyncIOMotorClient
 
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
-HTTP_TIMEOUT = 30
+MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017/")
+DATABASE_NAME = "PiliSeed"
+HTTP_TIMEOUT = 60
 MAX_RETRIES = 3
 RETRY_DELAY = 2
 
@@ -245,9 +249,6 @@ def call_gemini(prompt: str) -> Dict[str, Any]:
             
             text_content = data["candidates"][0]["content"]["parts"][0]["text"]
             
-            with open(f"debug_raw_gemini_response_attempt_{attempt+1}.txt", "w", encoding="utf-8") as f:
-                f.write(text_content)
-            
             text_content = text_content.strip()
             if text_content.startswith("```json"):
                 text_content = text_content[7:]
@@ -261,7 +262,6 @@ def call_gemini(prompt: str) -> Dict[str, Any]:
             
         except json.JSONDecodeError as e:
             last_error = e
-            print(f"  [DEBUG] JSON parsing failed. Raw response saved to debug_raw_gemini_response_attempt_{attempt+1}.txt")
             if attempt < MAX_RETRIES - 1:
                 wait_time = RETRY_DELAY * (attempt + 1)
                 print(f"Attempt {attempt + 1} failed: {e}. Retrying in {wait_time}s...", file=sys.stderr)
@@ -276,8 +276,22 @@ def call_gemini(prompt: str) -> Dict[str, Any]:
     raise RuntimeError(f"Failed after {MAX_RETRIES} attempts. Last error: {last_error}")
 
 
+async def save_to_mongodb(collection_name: str, data: Dict[str, Any]) -> str:
+    client = AsyncIOMotorClient(MONGODB_URL)
+    db = client[DATABASE_NAME]
+    collection = db[collection_name]
+    
+    document = {
+        "timestamp": datetime.datetime.utcnow(),
+        "data": data
+    }
+    
+    result = await collection.insert_one(document)
+    client.close()
+    return str(result.inserted_id)
 
-def main():
+
+async def main_async():
     farmer = collect_user_inputs()
 
     input_payload = {
@@ -297,9 +311,11 @@ def main():
         context_data = call_gemini(context_prompt)
         print("✓ Context analysis complete")
         
-        with open("debug_stage1_context.json", "w", encoding="utf-8") as f:
-            json.dump(context_data, f, indent=2, ensure_ascii=False)
-        print("  [DEBUG] Stage 1 output saved to: debug_stage1_context.json")
+        stage1_id = await save_to_mongodb("context_analysis", {
+            "input": input_payload,
+            "output": context_data
+        })
+        print(f"  [DB] Stage 1 saved to MongoDB with ID: {stage1_id}")
         
     except Exception as e:
         print(f"Error getting context: {e}")
@@ -310,16 +326,8 @@ def main():
     recommendation_prompt = recommendation_prompt.replace("{input_payload}", json.dumps(input_payload, ensure_ascii=False))
     recommendation_prompt = recommendation_prompt.replace("{start_month}", str(farmer.start_month))
     
-    with open("debug_stage2_prompt.txt", "w", encoding="utf-8") as f:
-        f.write(recommendation_prompt)
-    print("  [DEBUG] Stage 2 prompt saved to: debug_stage2_prompt.txt")
-    
     try:
         ai_response = call_gemini(recommendation_prompt)
-        
-        with open("debug_stage2_raw_response.txt", "w", encoding="utf-8") as f:
-            f.write(str(ai_response))
-        print("  [DEBUG] Stage 2 raw response saved to: debug_stage2_raw_response.txt")
         
     except Exception as e:
         print(f"Error getting recommendations: {e}")
@@ -336,15 +344,21 @@ def main():
             recs = []
         output = {"recommendations": recs}
 
-    with open("debug_final_output.json", "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2, ensure_ascii=False)
-    print("  [DEBUG] Final output saved to: debug_final_output.json")
+    stage2_id = await save_to_mongodb("crop_recommendations", {
+        "input": input_payload,
+        "context_data": context_data,
+        "output": output
+    })
+    print(f"  [DB] Stage 2 saved to MongoDB with ID: {stage2_id}")
 
     print("\n" + "="*80)
     print("CROP RECOMMENDATIONS")
     print("="*80)
     print(json.dumps(output, indent=2, ensure_ascii=False))
 
+
+def main():
+    asyncio.run(main_async())
 
 
 if __name__ == "__main__":

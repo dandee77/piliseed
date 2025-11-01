@@ -1,0 +1,51 @@
+{
+  "location_analysis": {
+    "province": "Metro Manila",
+    "region": "National Capital Region (NCR)",
+    "climate_type": "Type I (Two pronounced seasons: dry from November to April, wet during the rest of the year)",
+    "current_season": "Transition",
+    "season_end_month": 4
+  },
+  "weather_forecast": {
+    "current_month_rainfall_mm": 150,
+    "next_3months_rainfall_mm": 50,
+    "temperature_range_c": "25-32",
+    "typhoon_risk": "Moderate",
+    "el_nino_la_nina": "Normal"
+  },
+  "market_conditions": {
+    "high_demand_crops": [
+      "Mangoes",
+      "Bananas",
+      "Pineapples",
+      "Papayas"
+    ],
+    "price_trends": "Stable for bananas, pineapples, and mangoes. Papayas may see slight price increases due to seasonal demand.",
+    "export_opportunities": [
+      "Mangoes (especially Carabao)",
+      "Bananas (Cavendish)",
+      "Pineapples"
+    ],
+    "local_market_saturation": [
+      "Watermelons (can be oversupplied depending on the harvest)",
+      "Some leafy vegetables (check local market reports)"
+    ]
+  },
+  "agricultural_calendar": {
+    "optimal_planting_window": "November-January (for many fruit trees and vegetables)",
+    "harvest_season_conflict": "Minimal conflict for most fruits planted now, but monitor weather forecasts closely for late-season typhoons that could impact late harvests.",
+    "recommended_crop_cycles": [
+      "Medium (60-120d)",
+      "Long (120d+)"
+    ]
+  },
+  "risk_factors": {
+    "pest_disease_season": [
+      "Fruit flies (especially on mangoes and other fruits)",
+      "Anthracnose (on mangoes and papayas)",
+      "Banana bunchy top virus (BBTV)"
+    ],
+    "water_availability": "Moderate (Quezon City relies on piped water; monitor supply during dry spells)",
+    "soil_degradation_risk": "Moderate (Urban farming can lead to soil compaction and nutrient depletion if not managed properly. Soil testing and amendment are recommended.)"
+  }
+}

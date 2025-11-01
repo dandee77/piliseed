@@ -1,0 +1,407 @@
+```json
+{
+  "recommendations": [
+    {
+      "crop": "Mango - Carabao",
+      "scientific_name": "Mangifera indica",
+      "category": "Fruits",
+      "scores": {
+        "overall_score": 0.85,
+        "confidence_pct": 90,
+        "env_score": 0.8,
+        "econ_score": 0.9,
+        "time_fit_score": 0.7,
+        "season_score": 0.9,
+        "labor_score": 0.8,
+        "risk_score": 0.8,
+        "market_score": 0.95
+      },
+      "growth_requirements": {
+        "crop_cycle_days": 150,
+        "water_requirement": "Moderate, 10-20 liters/plant/day during dry season",
+        "sunlight_hours_daily": 8,
+        "optimal_temp_range_c": "24-35",
+        "soil_ph_range": "6.0-7.5",
+        "soil_type_preferred": "Well-drained loam"
+      },
+      "tolerances": {
+        "drought_tolerance": "Moderate",
+        "flood_tolerance": "Low",
+        "salinity_tolerance": "Low",
+        "frost_tolerance": "Low",
+        "shade_tolerance": "Low",
+        "pest_disease_resistance": "Moderate (susceptible to fruit flies and anthracnose)"
+      },
+      "management": {
+        "management_intensity": "High",
+        "labor_hours_per_ha_per_week": 25,
+        "organic_suitable": true,
+        "mechanization_possible": true,
+        "requires_irrigation": true,
+        "requires_trellising": false
+      },
+      "economics": {
+        "estimated_cost_php": 9000.0,
+        "cost_breakdown": {
+          "seeds_php": 1500.0,
+          "fertilizer_php": 2000.0,
+          "pesticides_php": 1500.0,
+          "labor_php": 3000.0,
+          "irrigation_php": 500.0,
+          "others_php": 500.0
+        },
+        "estimated_yield_kg_per_ha": 10000.0,
+        "estimated_revenue_php": 20000.0,
+        "profit_margin_pct": 55.0,
+        "roi_pct": 122.0,
+        "break_even_days": 100
+      },
+      "market_strategy": {
+        "best_selling_locations": [
+          "Divisoria Market",
+          "Farmers Market Cubao",
+          "Export markets"
+        ],
+        "current_market_price_php_per_kg": 20.0,
+        "projected_harvest_price_php_per_kg": 20.0,
+        "price_volatility": "Low",
+        "demand_level": "Very High",
+        "export_potential": true,
+        "buyer_types": [
+          "Wet market",
+          "Supermarket",
+          "Restaurant",
+          "Exporter"
+        ]
+      },
+      "planting_schedule": {
+        "recommended_planting_date": "November 15-30, 2024",
+        "expected_harvest_date": "April 15-30, 2025",
+        "succession_planting_possible": false,
+        "intercropping_compatible_with": [
+          "Legumes (e.g., peanuts, soybeans)"
+        ]
+      },
+      "risk_assessment": {
+        "weather_risks": [
+          "Typhoon damage to young trees",
+          "Drought stress during dry season"
+        ],
+        "pest_disease_risks": [
+          "Fruit fly infestation",
+          "Anthracnose"
+        ],
+        "market_risks": [
+          "Price fluctuations due to oversupply from other regions"
+        ],
+        "mitigation_strategies": [
+          "Implement fruit fly trapping and baiting programs",
+          "Apply appropriate fungicides for anthracnose control",
+          "Ensure adequate irrigation during dry spells"
+        ]
+      },
+      "reasoning": "Mangoes are in high demand, especially for export. The climate is suitable, and the farmer has the manpower. The budget is sufficient for initial investment."
+    },
+    {
+      "crop": "Banana - Cavendish",
+      "scientific_name": "Musa acuminata",
+      "category": "Fruits",
+      "scores": {
+        "overall_score": 0.82,
+        "confidence_pct": 90,
+        "env_score": 0.75,
+        "econ_score": 0.85,
+        "time_fit_score": 0.75,
+        "season_score": 0.9,
+        "labor_score": 0.7,
+        "risk_score": 0.85,
+        "market_score": 0.9
+      },
+      "growth_requirements": {
+        "crop_cycle_days": 90,
+        "water_requirement": "Moderate, 15 liters/plant/day",
+        "sunlight_hours_daily": 6,
+        "optimal_temp_range_c": "24-32",
+        "soil_ph_range": "6.0-7.0",
+        "soil_type_preferred": "Well-drained loam"
+      },
+      "tolerances": {
+        "drought_tolerance": "Moderate",
+        "flood_tolerance": "Low",
+        "salinity_tolerance": "Low",
+        "frost_tolerance": "Low",
+        "shade_tolerance": "Moderate",
+        "pest_disease_resistance": "Moderate (susceptible to BBTV)"
+      },
+      "management": {
+        "management_intensity": "Moderate",
+        "labor_hours_per_ha_per_week": 20,
+        "organic_suitable": true,
+        "mechanization_possible": true,
+        "requires_irrigation": true,
+        "requires_trellising": false
+      },
+      "economics": {
+        "estimated_cost_php": 8000.0,
+        "cost_breakdown": {
+          "seeds_php": 1000.0,
+          "fertilizer_php": 1800.0,
+          "pesticides_php": 1200.0,
+          "labor_php": 2500.0,
+          "irrigation_php": 500.0,
+          "others_php": 1000.0
+        },
+        "estimated_yield_kg_per_ha": 20000.0,
+        "estimated_revenue_php": 18000.0,
+        "profit_margin_pct": 55.56,
+        "roi_pct": 125.0,
+        "break_even_days": 70
+      },
+      "market_strategy": {
+        "best_selling_locations": [
+          "All major markets in Metro Manila",
+          "Export markets"
+        ],
+        "current_market_price_php_per_kg": 9.0,
+        "projected_harvest_price_php_per_kg": 9.0,
+        "price_volatility": "Low",
+        "demand_level": "High",
+        "export_potential": true,
+        "buyer_types": [
+          "Wet market",
+          "Supermarket",
+          "Restaurant",
+          "Exporter"
+        ]
+      },
+      "planting_schedule": {
+        "recommended_planting_date": "November 15-30, 2024",
+        "expected_harvest_date": "February 15-28, 2025",
+        "succession_planting_possible": true,
+        "intercropping_compatible_with": [
+          "Legumes (e.g., peanuts, soybeans)",
+          "Vegetables (e.g., leafy greens)"
+        ]
+      },
+      "risk_assessment": {
+        "weather_risks": [
+          "Typhoon damage",
+          "Waterlogging during heavy rains"
+        ],
+        "pest_disease_risks": [
+          "Banana Bunchy Top Virus (BBTV)",
+          "Sigatoka leaf spot"
+        ],
+        "market_risks": [
+          "Price fluctuations due to oversupply"
+        ],
+        "mitigation_strategies": [
+          "Source BBTV-free planting materials",
+          "Implement regular fungicide applications for Sigatoka control",
+          "Ensure proper drainage to prevent waterlogging"
+        ]
+      },
+      "reasoning": "Bananas are a staple crop with consistent demand. The short crop cycle fits the farmer's tolerance. Export potential adds to profitability."
+    },
+    {
+      "crop": "Papaya - Solo",
+      "scientific_name": "Carica papaya",
+      "category": "Fruits",
+      "scores": {
+        "overall_score": 0.78,
+        "confidence_pct": 90,
+        "env_score": 0.7,
+        "econ_score": 0.8,
+        "time_fit_score": 0.8,
+        "season_score": 0.85,
+        "labor_score": 0.75,
+        "risk_score": 0.75,
+        "market_score": 0.85
+      },
+      "growth_requirements": {
+        "crop_cycle_days": 120,
+        "water_requirement": "Moderate, 10 liters/plant/day",
+        "sunlight_hours_daily": 6,
+        "optimal_temp_range_c": "22-30",
+        "soil_ph_range": "6.0-6.5",
+        "soil_type_preferred": "Well-drained sandy loam"
+      },
+      "tolerances": {
+        "drought_tolerance": "Moderate",
+        "flood_tolerance": "Low",
+        "salinity_tolerance": "Low",
+        "frost_tolerance": "Low",
+        "shade_tolerance": "Low",
+        "pest_disease_resistance": "Moderate (susceptible to anthracnose and fruit flies)"
+      },
+      "management": {
+        "management_intensity": "Moderate",
+        "labor_hours_per_ha_per_week": 18,
+        "organic_suitable": true,
+        "mechanization_possible": false,
+        "requires_irrigation": true,
+        "requires_trellising": false
+      },
+      "economics": {
+        "estimated_cost_php": 7000.0,
+        "cost_breakdown": {
+          "seeds_php": 800.0,
+          "fertilizer_php": 1500.0,
+          "pesticides_php": 1000.0,
+          "labor_php": 2200.0,
+          "irrigation_php": 500.0,
+          "others_php": 1000.0
+        },
+        "estimated_yield_kg_per_ha": 15000.0,
+        "estimated_revenue_php": 15000.0,
+        "profit_margin_pct": 53.33,
+        "roi_pct": 114.29,
+        "break_even_days": 90
+      },
+      "market_strategy": {
+        "best_selling_locations": [
+          "Wet markets in Quezon City",
+          "Supermarkets"
+        ],
+        "current_market_price_php_per_kg": 10.0,
+        "projected_harvest_price_php_per_kg": 10.0,
+        "price_volatility": "Moderate",
+        "demand_level": "High",
+        "export_potential": false,
+        "buyer_types": [
+          "Wet market",
+          "Supermarket",
+          "Restaurant"
+        ]
+      },
+      "planting_schedule": {
+        "recommended_planting_date": "November 15-30, 2024",
+        "expected_harvest_date": "March 15-30, 2025",
+        "succession_planting_possible": true,
+        "intercropping_compatible_with": [
+          "Vegetables (e.g., leafy greens)",
+          "Legumes"
+        ]
+      },
+      "risk_assessment": {
+        "weather_risks": [
+          "Typhoon damage",
+          "Waterlogging"
+        ],
+        "pest_disease_risks": [
+          "Anthracnose",
+          "Fruit flies"
+        ],
+        "market_risks": [
+          "Price fluctuations due to seasonal supply"
+        ],
+        "mitigation_strategies": [
+          "Apply appropriate fungicides for anthracnose control",
+          "Implement fruit fly trapping",
+          "Ensure good drainage"
+        ]
+      },
+      "reasoning": "Papaya has good local demand and fits the budget. The crop cycle is manageable, and the farmer can potentially benefit from slight price increases."
+    },
+    {
+      "crop": "Pineapple - MD2",
+      "scientific_name": "Ananas comosus",
+      "category": "Fruits",
+      "scores": {
+        "overall_score": 0.75,
+        "confidence_pct": 90,
+        "env_score": 0.7,
+        "econ_score": 0.75,
+        "time_fit_score": 0.65,
+        "season_score": 0.8,
+        "labor_score": 0.7,
+        "risk_score": 0.75,
+        "market_score": 0.9
+      },
+      "growth_requirements": {
+        "crop_cycle_days": 180,
+        "water_requirement": "Low, 5 liters/plant/day",
+        "sunlight_hours_daily": 6,
+        "optimal_temp_range_c": "20-32",
+        "soil_ph_range": "4.5-6.5",
+        "soil_type_preferred": "Well-drained sandy loam"
+      },
+      "tolerances": {
+        "drought_tolerance": "High",
+        "flood_tolerance": "Low",
+        "salinity_tolerance": "Low",
+        "frost_tolerance": "Low",
+        "shade_tolerance": "Low",
+        "pest_disease_resistance": "Moderate"
+      },
+      "management": {
+        "management_intensity": "Moderate",
+        "labor_hours_per_ha_per_week": 15,
+        "organic_suitable": true,
+        "mechanization_possible": true,
+        "requires_irrigation": true,
+        "requires_trellising": false
+      },
+      "economics": {
+        "estimated_cost_php": 6500.0,
+        "cost_breakdown": {
+          "seeds_php": 1200.0,
+          "fertilizer_php": 1300.0,
+          "pesticides_php": 800.0,
+          "labor_php": 2000.0,
+          "irrigation_php": 200.0,
+          "others_php": 1000.0
+        },
+        "estimated_yield_kg_per_ha": 30000.0,
+        "estimated_revenue_php": 18000.0,
+        "profit_margin_pct": 63.85,
+        "roi_pct": 176.92,
+        "break_even_days": 140
+      },
+      "market_strategy": {
+        "best_selling_locations": [
+          "Supermarkets",
+          "Export markets"
+        ],
+        "current_market_price_php_per_kg": 6.0,
+        "projected_harvest_price_php_per_kg": 6.0,
+        "price_volatility": "Low",
+        "demand_level": "High",
+        "export_potential": true,
+        "buyer_types": [
+          "Supermarket",
+          "Processor",
+          "Exporter"
+        ]
+      },
+      "planting_schedule": {
+        "recommended_planting_date": "November 15-30, 2024",
+        "expected_harvest_date": "May 15-30, 2025",
+        "succession_planting_possible": false,
+        "intercropping_compatible_with": [
+          "Legumes"
+        ]
+      },
+      "risk_assessment": {
+        "weather_risks": [
+          "Typhoon damage",
+          "Prolonged dry spells"
+        ],
+        "pest_disease_risks": [
+          "Heart rot",
+          "Mealybugs"
+        ],
+        "market_risks": [
+          "Price competition from large-scale producers"
+        ],
+        "mitigation_strategies": [
+          "Ensure proper drainage",
+          "Monitor and control mealybug infestations",
+          "Secure contracts with processors or exporters"
+        ]
+      },
+      "reasoning": "Pineapple has strong export potential and fits within the budget. The longer crop cycle is a slight drawback, but the high yield and stable market make it attractive."
+    }
+  ]
+}
+```

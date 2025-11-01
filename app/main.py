@@ -38,7 +38,3 @@ async def root():
             "recommendations": "/recommendations"
         }
     }
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}

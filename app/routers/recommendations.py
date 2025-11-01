@@ -1,7 +1,6 @@
 import json
 from fastapi import APIRouter, HTTPException
 from app.models.schemas import (
-    ContextAnalysisRequest,
     ContextAnalysisResponse,
     RecommendationRequest,
     RecommendationResponse,
@@ -10,18 +9,19 @@ from app.models.schemas import (
 from app.services.gemini_service import call_gemini
 from app.services.database_service import save_to_mongodb
 from app.services.prompts import CONTEXT_ANALYSIS_PROMPT, RECOMMENDATION_PROMPT
-from app.core.config import DEFAULT_SENSOR_VALUES
+from app.core.config import DEFAULT_SENSOR_VALUES, LOCATION, START_MONTH
 from app.routers.sensors import current_sensor_data
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
-@router.post("/context-analysis", response_model=ContextAnalysisResponse)
-async def analyze_context(request: ContextAnalysisRequest):
-    sensors = request.sensors.dict() if request.sensors else DEFAULT_SENSOR_VALUES
+@router.get("/context-analysis", response_model=ContextAnalysisResponse)
+async def analyze_context():
+    sensors = current_sensor_data
     
     input_payload = {
         "sensors": sensors,
-        "farmer": request.farmer.dict()
+        "location": LOCATION,
+        "start_month": START_MONTH
     }
     
     try:
@@ -29,7 +29,7 @@ async def analyze_context(request: ContextAnalysisRequest):
             "{input_payload}", 
             json.dumps(input_payload, ensure_ascii=False)
         )
-        context_prompt = context_prompt.replace("{location}", request.farmer.location)
+        context_prompt = context_prompt.replace("{location}", LOCATION)
         
         context_data = call_gemini(context_prompt)
         
@@ -51,7 +51,9 @@ async def generate_recommendations(request: RecommendationRequest):
     
     input_payload = {
         "sensors": sensors,
-        "farmer": request.farmer.dict()
+        "farmer": request.farmer.dict(),
+        "location": LOCATION,
+        "start_month": START_MONTH
     }
     
     try:
@@ -59,7 +61,7 @@ async def generate_recommendations(request: RecommendationRequest):
             "{input_payload}", 
             json.dumps(input_payload, ensure_ascii=False)
         )
-        context_prompt = context_prompt.replace("{location}", request.farmer.location)
+        context_prompt = context_prompt.replace("{location}", LOCATION)
         
         context_data = call_gemini(context_prompt)
         
@@ -78,7 +80,7 @@ async def generate_recommendations(request: RecommendationRequest):
         )
         recommendation_prompt = recommendation_prompt.replace(
             "{start_month}", 
-            str(request.farmer.start_month)
+            str(START_MONTH)
         )
         
         ai_response = call_gemini(recommendation_prompt)

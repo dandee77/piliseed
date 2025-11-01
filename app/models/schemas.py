@@ -14,12 +14,6 @@ class FarmerInput(BaseModel):
     waiting_tolerance_days: int
     land_size_ha: float
     manpower: int
-    location: str
-    start_month: int
-
-class ContextAnalysisRequest(BaseModel):
-    farmer: FarmerInput
-    sensors: Optional[SensorData] = None
 
 class RecommendationRequest(BaseModel):
     farmer: FarmerInput

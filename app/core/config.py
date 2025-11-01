@@ -17,3 +17,6 @@ DEFAULT_SENSOR_VALUES = {
     "humidity_pct": 78,
     "light_lux": 20000,
 }
+
+LOCATION = "Malolos, Bulacan, Philippines"
+START_MONTH = 11

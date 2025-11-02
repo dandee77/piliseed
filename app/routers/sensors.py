@@ -16,6 +16,7 @@ async def create_sensor_location(location: SensorLocation):
         "name": location.name,
         "location": location.location,
         "description": location.description,
+        "image_url": location.image_url,
         "created_at": datetime.utcnow(),
         "last_updated": None,
         "current_sensors": DEFAULT_SENSOR_VALUES
@@ -29,6 +30,7 @@ async def create_sensor_location(location: SensorLocation):
         name=location.name,
         location=location.location,
         description=location.description,
+        image_url=location.image_url,
         created_at=sensor_document["created_at"],
         last_updated=None,
         current_sensors=SensorData(**DEFAULT_SENSOR_VALUES)
@@ -48,6 +50,7 @@ async def get_all_sensor_locations():
             name=doc["name"],
             location=doc["location"],
             description=doc.get("description"),
+            image_url=doc.get("image_url"),
             created_at=doc["created_at"],
             last_updated=doc.get("last_updated"),
             current_sensors=SensorData(**doc["current_sensors"]) if doc.get("current_sensors") else None
@@ -74,6 +77,7 @@ async def get_sensor_location(sensor_id: str):
         name=doc["name"],
         location=doc["location"],
         description=doc.get("description"),
+        image_url=doc.get("image_url"),
         created_at=doc["created_at"],
         last_updated=doc.get("last_updated"),
         current_sensors=SensorData(**doc["current_sensors"]) if doc.get("current_sensors") else None
@@ -121,4 +125,33 @@ async def get_current_sensor_data(sensor_id: str):
         raise HTTPException(status_code=404, detail="Sensor location not found")
     
     return SensorData(**doc.get("current_sensors", DEFAULT_SENSOR_VALUES))
+
+@router.delete("/locations/{sensor_id}")
+async def delete_sensor_location(sensor_id: str):
+    db = mongodb.get_database()
+    sensors_collection = db["sensor_locations"]
+    
+    from bson import ObjectId
+    try:
+        result = await sensors_collection.delete_one({"_id": ObjectId(sensor_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid sensor_id format")
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Sensor location not found")
+    
+    context_collection = db[f"sensor_{sensor_id}_context_analysis"]
+    await context_collection.drop()
+    
+    recommendations_collection = db[f"sensor_{sensor_id}_crop_recommendations"]
+    await recommendations_collection.drop()
+    
+    return {
+        "message": f"Sensor {sensor_id} and all associated data deleted successfully",
+        "deleted_collections": [
+            "sensor_locations",
+            f"sensor_{sensor_id}_context_analysis",
+            f"sensor_{sensor_id}_crop_recommendations"
+        ]
+    }
 

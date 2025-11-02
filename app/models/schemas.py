@@ -12,12 +12,14 @@ class SensorLocation(BaseModel):
     name: str
     location: str
     description: Optional[str] = None
+    image_url: Optional[str] = None
 
 class SensorLocationResponse(BaseModel):
     sensor_id: str
     name: str
     location: str
     description: Optional[str]
+    image_url: Optional[str]
     created_at: datetime
     last_updated: Optional[datetime] = None
     current_sensors: Optional[SensorData] = None

@@ -139,3 +139,61 @@ async def generate_recommendations(request: RecommendationRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Recommendation generation failed: {str(e)}")
+
+@router.delete("/{sensor_id}/context-analysis")
+async def delete_context_analysis(sensor_id: str):
+    db = mongodb.get_database()
+    collection_name = f"sensor_{sensor_id}_context_analysis"
+    
+    try:
+        collection = db[collection_name]
+        result = await collection.delete_many({"sensor_id": sensor_id})
+        
+        return {
+            "message": f"Deleted {result.deleted_count} context analysis records for sensor {sensor_id}",
+            "deleted_count": result.deleted_count,
+            "collection": collection_name
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete context analysis: {str(e)}")
+
+@router.delete("/{sensor_id}/recommendations")
+async def delete_recommendations(sensor_id: str):
+    db = mongodb.get_database()
+    collection_name = f"sensor_{sensor_id}_crop_recommendations"
+    
+    try:
+        collection = db[collection_name]
+        result = await collection.delete_many({"sensor_id": sensor_id})
+        
+        return {
+            "message": f"Deleted {result.deleted_count} recommendation records for sensor {sensor_id}",
+            "deleted_count": result.deleted_count,
+            "collection": collection_name
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete recommendations: {str(e)}")
+
+@router.delete("/{sensor_id}/all-data")
+async def delete_all_sensor_data(sensor_id: str):
+    db = mongodb.get_database()
+    
+    try:
+        context_collection = db[f"sensor_{sensor_id}_context_analysis"]
+        context_result = await context_collection.delete_many({"sensor_id": sensor_id})
+        
+        recommendations_collection = db[f"sensor_{sensor_id}_crop_recommendations"]
+        recommendations_result = await recommendations_collection.delete_many({"sensor_id": sensor_id})
+        
+        total_deleted = context_result.deleted_count + recommendations_result.deleted_count
+        
+        return {
+            "message": f"Deleted all data for sensor {sensor_id}",
+            "deleted_counts": {
+                "context_analysis": context_result.deleted_count,
+                "recommendations": recommendations_result.deleted_count,
+                "total": total_deleted
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete sensor data: {str(e)}")

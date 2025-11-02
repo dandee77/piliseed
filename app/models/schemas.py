@@ -122,6 +122,8 @@ class RiskAssessment(BaseModel):
 
 class CropRecommendation(BaseModel):
     crop: str
+    searchable_name: Optional[str] = None
+    image_url: Optional[str] = None
     scientific_name: str
     category: str
     scores: Score

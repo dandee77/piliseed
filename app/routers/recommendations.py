@@ -9,6 +9,7 @@ from app.models.schemas import (
 )
 from app.services.gemini_service import call_gemini
 from app.services.database_service import save_to_mongodb
+from app.services.wikipedia_service import fetch_wikipedia_thumbnail
 from app.services.prompts import CONTEXT_ANALYSIS_PROMPT, RECOMMENDATION_PROMPT
 from app.core.config import DEFAULT_SENSOR_VALUES, START_MONTH
 from app.core.database import mongodb
@@ -82,6 +83,7 @@ async def analyze_context(sensor_id: str, refresh: bool = False):
 async def generate_recommendations(request: RecommendationRequest):
     db = mongodb.get_database()
     sensors_collection = db["sensor_locations"]
+    context_collection = db["location_analysis"]
     
     try:
         sensor_doc = await sensors_collection.find_one({"_id": ObjectId(request.sensor_id)})
@@ -102,20 +104,28 @@ async def generate_recommendations(request: RecommendationRequest):
     }
     
     try:
-        context_prompt = CONTEXT_ANALYSIS_PROMPT.replace(
-            "{input_payload}", 
-            json.dumps(input_payload, ensure_ascii=False)
+        existing_context = await context_collection.find_one(
+            {"data.sensor_id": request.sensor_id},
+            sort=[("timestamp", -1)]
         )
-        context_prompt = context_prompt.replace("{location}", location)
         
-        context_data = call_gemini(context_prompt)
-        
-        await save_to_mongodb("location_analysis", {
-            "sensor_id": request.sensor_id,
-            "sensor_name": sensor_doc["name"],
-            "input": input_payload,
-            "output": context_data
-        })
+        if existing_context and "data" in existing_context:
+            context_data = existing_context["data"].get("output")
+        else:
+            context_prompt = CONTEXT_ANALYSIS_PROMPT.replace(
+                "{input_payload}", 
+                json.dumps(input_payload, ensure_ascii=False)
+            )
+            context_prompt = context_prompt.replace("{location}", location)
+            
+            context_data = call_gemini(context_prompt)
+            
+            await save_to_mongodb("location_analysis", {
+                "sensor_id": request.sensor_id,
+                "sensor_name": sensor_doc["name"],
+                "input": input_payload,
+                "output": context_data
+            })
         
         recommendation_prompt = RECOMMENDATION_PROMPT.replace(
             "{context_data}", 
@@ -142,6 +152,17 @@ async def generate_recommendations(request: RecommendationRequest):
             else:
                 recs = []
             output = {"recommendations": recs}
+        
+        for recommendation in output.get("recommendations", []):
+            searchable_name = recommendation.get("searchable_name")
+            print(f"Processing crop: {recommendation.get('crop')}, searchable_name: {searchable_name}")
+            if searchable_name:
+                image_url = await fetch_wikipedia_thumbnail(searchable_name)
+                print(f"Fetched image_url: {image_url}")
+                recommendation["image_url"] = image_url
+            else:
+                print(f"No searchable_name found for crop: {recommendation.get('crop')}")
+                recommendation["image_url"] = None
         
         document_id = await save_to_mongodb("crop_recommendations", {
             "sensor_id": request.sensor_id,

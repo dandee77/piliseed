@@ -67,6 +67,7 @@ Each recommendation must include ALL these fields:
 
 {{
   "crop": "string (specific variety if applicable, e.g., 'Ampalaya - Jade 20')",
+  "searchable_name": "string (common English name for Wikipedia search, e.g., 'bitter gourd' for Ampalaya, 'mustard greens' for Mustasa, 'eggplant' for Talong, 'lettuce' for Lettuce)",
   "scientific_name": "string",
   "category": "string (Vegetables/Fruits/Cereals/Legumes/Cash/Fodder/Herbs/Ornamentals)",
   

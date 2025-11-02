@@ -5,6 +5,9 @@ import { HomePage } from './pages/HomePage';
 import { GreenhouseDetail } from './pages/GreenhouseDetail';
 import { CropsPage } from './pages/CropsPage';
 import { CropDetail } from './pages/CropDetail';
+import { HistoryPage } from './pages/HistoryPage';
+import { HistoryDetailPage } from './pages/HistoryDetailPage';
+import { HistoryCropDetail } from './pages/HistoryCropDetail';
 import { ExpandableNavBar } from './components/ExpandableNavBar';
 function AnimatedRoutes() {
   const location = useLocation();
@@ -17,6 +20,8 @@ function AnimatedRoutes() {
       setActiveTab('home');
     } else if (location.pathname.includes('/crops')) {
       setActiveTab('plant');
+    } else if (location.pathname.includes('/history')) {
+      setActiveTab('history');
     } else if (location.pathname.includes('/greenhouse/')) {
       setActiveTab('data');
     }
@@ -30,6 +35,11 @@ function AnimatedRoutes() {
       if (match) {
         navigate(`/greenhouse/${match[1]}/crops`);
       }
+    } else if (tab === 'history' && isDetailPage) {
+      const match = location.pathname.match(/\/greenhouse\/([^\/]+)/);
+      if (match) {
+        navigate(`/greenhouse/${match[1]}/history`);
+      }
     }
   };
 
@@ -40,6 +50,9 @@ function AnimatedRoutes() {
           <Route path="/greenhouse/:id" element={<GreenhouseDetail />} />
           <Route path="/greenhouse/:id/crops" element={<CropsPage />} />
           <Route path="/greenhouse/:id/crops/:cropIndex" element={<CropDetail />} />
+          <Route path="/greenhouse/:id/history" element={<HistoryPage />} />
+          <Route path="/greenhouse/:id/history/:sessionId" element={<HistoryDetailPage />} />
+          <Route path="/greenhouse/:id/history/:sessionId/crops/:cropIndex" element={<HistoryCropDetail />} />
         </Routes>
       </AnimatePresence>
       {/* Navigation Bar - Outside page transitions */}

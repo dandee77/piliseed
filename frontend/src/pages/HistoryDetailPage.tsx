@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeftIcon, SproutIcon, RefreshCwIcon } from 'lucide-react';
-import { FarmerForm } from '../components/FarmerForm';
+import { ArrowLeftIcon, SproutIcon } from 'lucide-react';
 import { CropCard } from '../components/CropCard';
 import { API_BASE_URL } from '../config';
 
@@ -34,103 +33,43 @@ interface CropRecommendation {
   reasoning: string;
 }
 
-interface FarmerFormData {
-  crop_category: string;
-  budget_php: number;
-  waiting_tolerance_days: number;
-  land_size_ha: number;
-  manpower: number;
-}
-
-export function CropsPage() {
-  const { id } = useParams<{ id: string }>();
+export function HistoryDetailPage() {
+  const { id, sessionId } = useParams<{ id: string; sessionId: string }>();
   const navigate = useNavigate();
-  const [recommendations, setRecommendations] = useState<CropRecommendation[] | null>(null);
-  const [recommendationId, setRecommendationId] = useState<string | null>(null);
+  const [recommendations, setRecommendations] = useState<CropRecommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    checkExistingRecommendations();
-  }, [id]);
+    fetchSessionDetails();
+  }, [sessionId]);
 
-  const checkExistingRecommendations = async () => {
-    if (!id) return;
+  const fetchSessionDetails = async () => {
+    if (!sessionId) return;
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_BASE_URL}/recommendations/${id}/latest`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.recommendations && data.recommendations.length > 0) {
-          setRecommendations(data.recommendations);
-          setRecommendationId(data.id);
-          setShowForm(false);
-        } else {
-          setRecommendations(null);
-          setShowForm(true);
-        }
-      } else if (response.status === 404) {
-        setRecommendations(null);
-        setShowForm(true);
-      } else {
-        throw new Error('Failed to check recommendations');
+      const response = await fetch(`${API_BASE_URL}/recommendations/session/${sessionId}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch session details');
       }
+
+      const data = await response.json();
+      setRecommendations(data.recommendations);
     } catch (err) {
-      console.error('Error checking recommendations:', err);
-      setRecommendations(null);
-      setShowForm(true);
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleFormSubmit = async (formData: FarmerFormData) => {
-    if (!id) return;
-
-    try {
-      setIsGenerating(true);
-      setError(null);
-
-      const response = await fetch(`${API_BASE_URL}/recommendations/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sensor_id: id,
-          farmer: formData,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate recommendations');
-      }
-
-      const data = await response.json();
-      setRecommendations(data.recommendations);
-      setRecommendationId(data.id);
-      setShowForm(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    setShowForm(true);
+  const handleBack = () => {
+    navigate(`/greenhouse/${id}/history`);
   };
 
   const handleCropClick = (index: number) => {
-    navigate(`/greenhouse/${id}/crops/${index}`);
-  };
-
-  const handleBack = () => {
-    navigate(`/greenhouse/${id}`);
+    navigate(`/greenhouse/${id}/history/${sessionId}/crops/${index}`);
   };
 
   if (isLoading) {
@@ -158,21 +97,11 @@ export function CropsPage() {
             <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
           </motion.button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">Crop Recommendations</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Session Crops</h1>
             <p className="text-sm text-gray-500">
-              {recommendations && !showForm ? 'Select a crop to view details' : 'Tell us about your farm'}
+              {recommendations.length} recommendations
             </p>
           </div>
-          {recommendations && !showForm && (
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={handleRefresh}
-              className="p-3 bg-lime-100 hover:bg-lime-200 rounded-xl transition-colors"
-            >
-              <RefreshCwIcon className="w-5 h-5 text-lime-600" />
-            </motion.button>
-          )}
           <div className="p-3 bg-lime-100 rounded-xl">
             <SproutIcon className="w-6 h-6 text-lime-600" />
           </div>
@@ -190,13 +119,23 @@ export function CropsPage() {
           </motion.div>
         )}
 
-        {showForm || !recommendations ? (
-          <FarmerForm onSubmit={handleFormSubmit} isLoading={isGenerating} />
+        {recommendations.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-lg p-8 text-center"
+          >
+            <SproutIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Crops Found</h3>
+            <p className="text-sm text-gray-600">
+              This session has no crop recommendations.
+            </p>
+          </motion.div>
         ) : (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl shadow-lg p-4">
               <p className="text-sm text-gray-600">
-                Based on your location and preferences, we recommend these crops:
+                Historical crop recommendations from this session:
               </p>
             </div>
 

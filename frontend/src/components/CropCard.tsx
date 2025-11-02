@@ -1,15 +1,16 @@
 import { motion } from 'framer-motion';
-import { SproutIcon } from 'lucide-react';
+import { SproutIcon, CheckCircleIcon } from 'lucide-react';
 
 interface CropCardProps {
   crop: string;
   category: string;
   overallScore: number;
   imageUrl?: string;
+  planted?: boolean;
   onClick: () => void;
 }
 
-export function CropCard({ crop, category, overallScore, imageUrl, onClick }: CropCardProps) {
+export function CropCard({ crop, category, overallScore, imageUrl, planted, onClick }: CropCardProps) {
   const scorePercentage = Math.round(overallScore * 100);
   
   const getScoreColor = (score: number) => {
@@ -43,6 +44,12 @@ export function CropCard({ crop, category, overallScore, imageUrl, onClick }: Cr
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <SproutIcon className="w-16 h-16 text-green-300" />
+          </div>
+        )}
+        
+        {planted && (
+          <div className="absolute top-3 left-3 bg-green-600 p-2 rounded-full shadow-lg">
+            <CheckCircleIcon className="w-5 h-5 text-white" />
           </div>
         )}
         

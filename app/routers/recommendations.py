@@ -258,3 +258,90 @@ async def delete_all_sensor_data(sensor_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete sensor data: {str(e)}")
+
+@router.patch("/{recommendation_id}/crops/{crop_index}/planted")
+async def toggle_crop_planted(recommendation_id: str, crop_index: int, planted: bool):
+    db = mongodb.get_database()
+    recommendations_collection = db["crop_recommendations"]
+    
+    try:
+        recommendation_doc = await recommendations_collection.find_one({"_id": ObjectId(recommendation_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid recommendation_id format")
+    
+    if not recommendation_doc:
+        raise HTTPException(status_code=404, detail="Recommendation not found")
+    
+    output = recommendation_doc.get("data", {}).get("output", {})
+    recommendations = output.get("recommendations", [])
+    
+    if crop_index < 0 or crop_index >= len(recommendations):
+        raise HTTPException(status_code=404, detail="Crop index out of range")
+    
+    recommendations[crop_index]["planted"] = planted
+    
+    await recommendations_collection.update_one(
+        {"_id": ObjectId(recommendation_id)},
+        {"$set": {"data.output.recommendations": recommendations}}
+    )
+    
+    return {
+        "message": f"Crop {'marked as planted' if planted else 'unmarked'}",
+        "crop": recommendations[crop_index]["crop"],
+        "planted": planted
+    }
+
+@router.get("/{sensor_id}/history")
+async def get_recommendation_history(sensor_id: str):
+    db = mongodb.get_database()
+    recommendations_collection = db["crop_recommendations"]
+    
+    try:
+        history_cursor = recommendations_collection.find(
+            {"data.sensor_id": sensor_id}
+        ).sort("timestamp", -1)
+        
+        history = []
+        async for doc in history_cursor:
+            output = doc.get("data", {}).get("output", {})
+            recommendations = output.get("recommendations", [])
+            
+            planted_count = sum(1 for rec in recommendations if rec.get("planted", False))
+            
+            history.append({
+                "id": str(doc["_id"]),
+                "timestamp": doc["timestamp"],
+                "sensor_name": doc.get("data", {}).get("sensor_name", "Unknown"),
+                "total_crops": len(recommendations),
+                "planted_count": planted_count,
+                "farmer_input": doc.get("data", {}).get("input", {}).get("farmer", {})
+            })
+        
+        return {"history": history}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
+
+@router.get("/session/{recommendation_id}", response_model=RecommendationResponse)
+async def get_recommendation_session(recommendation_id: str):
+    db = mongodb.get_database()
+    recommendations_collection = db["crop_recommendations"]
+    
+    try:
+        recommendation_doc = await recommendations_collection.find_one({"_id": ObjectId(recommendation_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid recommendation_id format")
+    
+    if not recommendation_doc or "data" not in recommendation_doc:
+        raise HTTPException(status_code=404, detail="Recommendation session not found")
+    
+    output = recommendation_doc["data"].get("output", {})
+    recommendations = output.get("recommendations", [])
+    
+    if not recommendations:
+        raise HTTPException(status_code=404, detail="No recommendations in this session")
+    
+    return RecommendationResponse(
+        id=str(recommendation_doc["_id"]),
+        recommendations=recommendations
+    )
+

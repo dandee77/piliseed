@@ -126,6 +126,7 @@ class CropRecommendation(BaseModel):
     image_url: Optional[str] = None
     scientific_name: str
     category: str
+    planted: bool = False
     scores: Score
     growth_requirements: GrowthRequirements
     tolerances: Tolerances

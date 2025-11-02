@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { HomeIcon, MessageCircleIcon, SettingsIcon, BarChart3Icon, SproutIcon } from 'lucide-react';
+import { HomeIcon, MessageCircleIcon, SettingsIcon, BarChart3Icon, SproutIcon, ClockIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 interface ExpandableNavBarProps {
   activeTab: string;
@@ -37,18 +37,19 @@ export function ExpandableNavBar({
       if (activeTab === 'chat') return 64; // 12 + 48 + 4
       if (activeTab === 'settings') return 116; // 64 + 48 + 4
     } else {
-      // Expanded state: home, data, plant, chat, settings
+      // Expanded state: home, data, plant, history, chat, settings
       if (activeTab === 'home') return 12;
       if (activeTab === 'data') return 64; // 12 + 48 + 4
       if (activeTab === 'plant') return 116; // 64 + 48 + 4
-      if (activeTab === 'chat') return 168; // 116 + 48 + 4
-      if (activeTab === 'settings') return 220; // 168 + 48 + 4
+      if (activeTab === 'history') return 168; // 116 + 48 + 4
+      if (activeTab === 'chat') return 220; // 168 + 48 + 4
+      if (activeTab === 'settings') return 272; // 220 + 48 + 4
     }
     return 12;
   };
   return <div className="fixed bottom-0 left-0 right-0 flex justify-center pb-8 px-5 pointer-events-none">
       <motion.div className="bg-gray-900 rounded-full shadow-2xl flex items-center justify-center gap-1 px-3 py-3 relative pointer-events-auto" initial={false} animate={{
-      width: isExpanded ? '288px' : '192px'
+      width: isExpanded ? '340px' : '192px'
     }} transition={{
       type: 'spring',
       stiffness: 300,
@@ -65,11 +66,11 @@ export function ExpandableNavBar({
           }} exit={{
             opacity: 0
           }} className="absolute left-3 top-3 w-12 h-12 bg-black/40 rounded-full" />
-              {/* Extended darker background covering home, data, and plant */}
+              {/* Extended darker background covering home, data, plant, and history */}
               <motion.div className="absolute left-3 top-3 bottom-3 bg-black/20 rounded-full" initial={{
             width: 48
           }} animate={{
-            width: 164
+            width: 216
           }} exit={{
             width: 48
           }} transition={{
@@ -134,6 +135,29 @@ export function ExpandableNavBar({
           delay: 0.05
         }} onClick={() => setActiveTab('plant')} className="h-12 rounded-full flex items-center justify-center relative z-10">
               <SproutIcon className={`w-6 h-6 ${activeTab === 'plant' ? 'text-gray-900' : 'text-white'}`} />
+            </motion.button>}
+        </AnimatePresence>
+        {/* History Icon - Only visible when expanded */}
+        <AnimatePresence>
+          {isExpanded && <motion.button initial={{
+          opacity: 0,
+          x: -10,
+          width: 0
+        }} animate={{
+          opacity: 1,
+          x: 0,
+          width: 48
+        }} exit={{
+          opacity: 0,
+          x: -10,
+          width: 0
+        }} transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 30,
+          delay: 0.1
+        }} onClick={() => setActiveTab('history')} className="h-12 rounded-full flex items-center justify-center relative z-10">
+              <ClockIcon className={`w-6 h-6 ${activeTab === 'history' ? 'text-gray-900' : 'text-white'}`} />
             </motion.button>}
         </AnimatePresence>
         {/* Chat Icon - Always visible */}

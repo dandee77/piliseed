@@ -13,7 +13,8 @@ import {
   SunIcon,
   ShieldIcon,
   UsersIcon,
-  BarChart3Icon
+  BarChart3Icon,
+  CheckCircleIcon
 } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 
@@ -23,6 +24,7 @@ interface CropRecommendation {
   image_url?: string;
   scientific_name: string;
   category: string;
+  planted?: boolean;
   scores: {
     overall_score: number;
     confidence_pct: number;
@@ -102,7 +104,9 @@ export function CropDetail() {
   const { id, cropIndex } = useParams<{ id: string; cropIndex: string }>();
   const navigate = useNavigate();
   const [crop, setCrop] = useState<CropRecommendation | null>(null);
+  const [recommendationId, setRecommendationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTogglingPlanted, setIsTogglingPlanted] = useState(false);
 
   useEffect(() => {
     fetchCropDetails();
@@ -124,6 +128,7 @@ export function CropDetail() {
       
       if (data.recommendations && data.recommendations[index]) {
         setCrop(data.recommendations[index]);
+        setRecommendationId(data.id);
       } else {
         navigate(`/greenhouse/${id}/crops`);
       }
@@ -132,6 +137,30 @@ export function CropDetail() {
       navigate(`/greenhouse/${id}/crops`);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleTogglePlanted = async () => {
+    if (!recommendationId || cropIndex === undefined || !crop) return;
+
+    try {
+      setIsTogglingPlanted(true);
+      const newPlantedStatus = !crop.planted;
+
+      const response = await fetch(
+        `${API_BASE_URL}/recommendations/${recommendationId}/crops/${cropIndex}/planted?planted=${newPlantedStatus}`,
+        { method: 'PATCH' }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update planted status');
+      }
+
+      setCrop({ ...crop, planted: newPlantedStatus });
+    } catch (err) {
+      console.error('Error toggling planted status:', err);
+    } finally {
+      setIsTogglingPlanted(false);
     }
   };
 
@@ -579,6 +608,34 @@ export function CropDetail() {
               </div>
             )}
           </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="fixed bottom-24 left-0 right-0 px-5 max-w-[430px] mx-auto"
+        >
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleTogglePlanted}
+            disabled={isTogglingPlanted}
+            className={`w-full py-4 rounded-xl shadow-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
+              crop.planted
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : 'bg-white hover:bg-gray-50 text-gray-900 border-2 border-green-600'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <CheckCircleIcon className={`w-5 h-5 ${crop.planted ? 'text-white' : 'text-green-600'}`} />
+            {isTogglingPlanted ? (
+              'Updating...'
+            ) : crop.planted ? (
+              'Marked as Planted'
+            ) : (
+              'Mark as Planted'
+            )}
+          </motion.button>
         </motion.div>
       </div>
     </div>

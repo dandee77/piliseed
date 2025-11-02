@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { GreenhouseCard } from '../components/GreenhouseCard';
 import { SearchIcon, BellIcon } from 'lucide-react';
@@ -19,6 +20,7 @@ interface Sensor {
 }
 
 export function HomePage() {
+  const navigate = useNavigate();
   const [sensors, setSensors] = useState<Sensor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +58,18 @@ export function HomePage() {
   }} className="w-full min-h-screen bg-gray-50 flex flex-col">
       <div className="bg-white px-5 pt-12 pb-4">
         <div className="flex items-center justify-between mb-6">
-          <img src="https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png" alt="Profile" className="w-10 h-10 rounded-full object-cover" />
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/settings')}
+            className="rounded-full"
+          >
+            <img 
+              src="https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png" 
+              alt="Profile" 
+              className="w-10 h-10 rounded-full object-cover border-2 border-green-200 hover:border-green-400 transition-colors" 
+            />
+          </motion.button>
           <div className="flex items-center gap-4">
             <button className="p-2">
               <SearchIcon className="w-5 h-5 text-gray-800" />

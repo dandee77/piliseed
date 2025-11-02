@@ -8,6 +8,7 @@ import { CropDetail } from './pages/CropDetail';
 import { HistoryPage } from './pages/HistoryPage';
 import { HistoryDetailPage } from './pages/HistoryDetailPage';
 import { HistoryCropDetail } from './pages/HistoryCropDetail';
+import { SettingsPage } from './pages/SettingsPage';
 import { ExpandableNavBar } from './components/ExpandableNavBar';
 function AnimatedRoutes() {
   const location = useLocation();
@@ -15,10 +16,11 @@ function AnimatedRoutes() {
   const [activeTab, setActiveTab] = useState('home');
   const isDetailPage = location.pathname.includes('/greenhouse/');
   
-  // Hide navbar on crop detail pages (both current and history)
-  const isCropDetailPage = 
+  // Hide navbar on crop detail pages and settings page
+  const shouldHideNavbar = 
     location.pathname.match(/\/greenhouse\/[^\/]+\/crops\/\d+/) ||
-    location.pathname.match(/\/history\/[^\/]+\/crops\/\d+/);
+    location.pathname.match(/\/history\/[^\/]+\/crops\/\d+/) ||
+    location.pathname === '/settings';
 
   useEffect(() => {
     if (location.pathname === '/') {
@@ -56,6 +58,7 @@ function AnimatedRoutes() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="/greenhouse/:id" element={<GreenhouseDetail />} />
           <Route path="/greenhouse/:id/crops" element={<CropsPage />} />
           <Route path="/greenhouse/:id/crops/:cropIndex" element={<CropDetail />} />
@@ -64,8 +67,8 @@ function AnimatedRoutes() {
           <Route path="/history/:sessionId/crops/:cropIndex" element={<HistoryCropDetail />} />
         </Routes>
       </AnimatePresence>
-      {/* Navigation Bar - Hidden on crop detail pages */}
-      {!isCropDetailPage && (
+      {/* Navigation Bar - Hidden on crop detail pages and settings */}
+      {!shouldHideNavbar && (
         <ExpandableNavBar activeTab={activeTab} setActiveTab={handleTabChange} isExpanded={isDetailPage} />
       )}
     </>;

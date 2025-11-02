@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeftIcon, SproutIcon, RefreshCwIcon } from 'lucide-react';
+import { ArrowLeftIcon, RefreshCwIcon } from 'lucide-react';
 import { FarmerForm } from '../components/FarmerForm';
 import { CropCard } from '../components/CropCard';
 import { API_BASE_URL } from '../config';
@@ -173,9 +173,6 @@ export function CropsPage() {
               <RefreshCwIcon className="w-5 h-5 text-lime-600" />
             </motion.button>
           )}
-          <div className="p-3 bg-lime-100 rounded-xl">
-            <SproutIcon className="w-6 h-6 text-lime-600" />
-          </div>
         </div>
       </div>
 

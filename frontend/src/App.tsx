@@ -14,6 +14,11 @@ function AnimatedRoutes() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('home');
   const isDetailPage = location.pathname.includes('/greenhouse/');
+  
+  // Hide navbar on crop detail pages (both current and history)
+  const isCropDetailPage = 
+    location.pathname.match(/\/greenhouse\/[^\/]+\/crops\/\d+/) ||
+    location.pathname.match(/\/history\/[^\/]+\/crops\/\d+/);
 
   useEffect(() => {
     if (location.pathname === '/') {
@@ -30,13 +35,20 @@ function AnimatedRoutes() {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     
-    if (tab === 'plant' && isDetailPage) {
+    if (tab === 'data' && isDetailPage) {
+      const match = location.pathname.match(/\/greenhouse\/([^\/]+)/);
+      if (match) {
+        navigate(`/greenhouse/${match[1]}`);
+      }
+    } else if (tab === 'plant' && isDetailPage) {
       const match = location.pathname.match(/\/greenhouse\/([^\/]+)/);
       if (match) {
         navigate(`/greenhouse/${match[1]}/crops`);
       }
     } else if (tab === 'history') {
       navigate('/history');
+    } else if (tab === 'home') {
+      navigate('/');
     }
   };
 
@@ -52,8 +64,10 @@ function AnimatedRoutes() {
           <Route path="/history/:sessionId/crops/:cropIndex" element={<HistoryCropDetail />} />
         </Routes>
       </AnimatePresence>
-      {/* Navigation Bar - Outside page transitions */}
-      <ExpandableNavBar activeTab={activeTab} setActiveTab={handleTabChange} isExpanded={isDetailPage} />
+      {/* Navigation Bar - Hidden on crop detail pages */}
+      {!isCropDetailPage && (
+        <ExpandableNavBar activeTab={activeTab} setActiveTab={handleTabChange} isExpanded={isDetailPage} />
+      )}
     </>;
 }
 export function App() {

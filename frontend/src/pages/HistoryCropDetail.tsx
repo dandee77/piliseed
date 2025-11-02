@@ -296,7 +296,7 @@ export function HistoryCropDetail() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="fixed bottom-24 left-0 right-0 px-5 max-w-[430px] mx-auto"
+          className="fixed bottom-8 left-0 right-0 px-5 max-w-[430px] mx-auto"
         >
           <motion.button
             whileHover={{ scale: 1.02 }}

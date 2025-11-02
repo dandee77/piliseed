@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { HomePage } from './pages/HomePage';
@@ -7,14 +7,11 @@ import { ExpandableNavBar } from './components/ExpandableNavBar';
 function AnimatedRoutes() {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('home');
-  // Determine if we're on a detail page
   const isDetailPage = location.pathname.includes('/greenhouse/');
-  // Update active tab based on route
+
   useEffect(() => {
     if (location.pathname === '/') {
       setActiveTab('home');
-    } else if (location.pathname.includes('/greenhouse/')) {
-      setActiveTab('data');
     }
   }, [location.pathname]);
   return <>

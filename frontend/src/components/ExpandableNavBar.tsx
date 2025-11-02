@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HomeIcon, MessageCircleIcon, SettingsIcon, BarChart3Icon, SproutIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

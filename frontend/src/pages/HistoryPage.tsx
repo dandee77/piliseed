@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeftIcon, ClockIcon, SproutIcon, CheckCircleIcon, MapPinIcon } from 'lucide-react';
 import { API_BASE_URL } from '../config';
+import { useUser } from '../contexts/UserContext';
 
 interface HistorySession {
   id: string;
@@ -23,6 +24,7 @@ interface HistorySession {
 
 export function HistoryPage() {
   const navigate = useNavigate();
+  const { user } = useUser();
   const [history, setHistory] = useState<HistorySession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,9 +34,11 @@ export function HistoryPage() {
   }, []);
 
   const fetchHistory = async () => {
+    if (!user) return;
+    
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_BASE_URL}/recommendations/history/all`);
+      const response = await fetch(`${API_BASE_URL}/recommendations/history/all?user_id=${user.user_id}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch history');
@@ -103,7 +107,7 @@ export function HistoryPage() {
             <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
           </motion.button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">Recommendation History</h1>
+            <h1 className="text-2xl font-bold text-gray-900">History</h1>
             <p className="text-sm text-gray-500">
               {history.length} {history.length === 1 ? 'session' : 'sessions'} found
             </p>

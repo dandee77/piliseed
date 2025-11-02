@@ -10,13 +10,25 @@ import {
   ChevronRightIcon,
   AlertCircleIcon
 } from 'lucide-react';
+import { useUser } from '../contexts/UserContext';
 
 export function SettingsPage() {
   const navigate = useNavigate();
+  const { user, logout } = useUser();
 
   const handleBack = () => {
     navigate('/');
   };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+  
+  if (!user) {
+    navigate('/');
+    return null;
+  }
 
   return (
     <motion.div
@@ -46,7 +58,7 @@ export function SettingsPage() {
             <UserIcon className="w-8 h-8 text-white" />
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-900">Mock Account</h2>
+            <h2 className="text-xl font-bold text-gray-900">{user.first_name} {user.last_name}</h2>
             <p className="text-sm text-gray-600">Prototype User</p>
           </div>
         </div>
@@ -173,11 +185,11 @@ export function SettingsPage() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => {}}
+            onClick={handleLogout}
             className="w-full bg-white rounded-2xl shadow-sm p-4 flex items-center justify-center gap-2 text-red-600 font-semibold hover:bg-red-50 transition-colors"
           >
             <LogOutIcon className="w-5 h-5" />
-            Log Out (Demo)
+            Log Out
           </motion.button>
         </motion.div>
 

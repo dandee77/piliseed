@@ -17,13 +17,13 @@ from app.core.database import mongodb
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
 @router.get("/{sensor_id}/latest", response_model=RecommendationResponse)
-async def get_latest_recommendations(sensor_id: str):
+async def get_latest_recommendations(sensor_id: str, user_id: str):
     db = mongodb.get_database()
     recommendations_collection = db["crop_recommendations"]
     
     try:
         latest_recommendation = await recommendations_collection.find_one(
-            {"data.sensor_id": sensor_id},
+            {"data.sensor_id": sensor_id, "data.user_id": user_id},
             sort=[("timestamp", -1)]
         )
         
@@ -38,6 +38,8 @@ async def get_latest_recommendations(sensor_id: str):
         
         return RecommendationResponse(
             id=str(latest_recommendation["_id"]),
+            user_id=user_id,
+            sensor_id=sensor_id,
             recommendations=recommendations
         )
     except HTTPException:
@@ -46,7 +48,7 @@ async def get_latest_recommendations(sensor_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to fetch recommendations: {str(e)}")
 
 @router.get("/{sensor_id}/context-analysis", response_model=ContextAnalysisResponse)
-async def analyze_context(sensor_id: str, refresh: bool = False):
+async def analyze_context(sensor_id: str, user_id: str, refresh: bool = False):
     db = mongodb.get_database()
     sensors_collection = db["sensor_locations"]
     context_collection = db["location_analysis"]
@@ -61,7 +63,7 @@ async def analyze_context(sensor_id: str, refresh: bool = False):
     
     if not refresh:
         existing_context = await context_collection.find_one(
-            {"data.sensor_id": sensor_id},
+            {"data.sensor_id": sensor_id, "data.user_id": user_id},
             sort=[("timestamp", -1)]
         )
         
@@ -70,6 +72,8 @@ async def analyze_context(sensor_id: str, refresh: bool = False):
             if context_data:
                 return ContextAnalysisResponse(
                     id=str(existing_context["_id"]),
+                    user_id=user_id,
+                    sensor_id=sensor_id,
                     **context_data
                 )
     
@@ -92,10 +96,11 @@ async def analyze_context(sensor_id: str, refresh: bool = False):
         context_data = call_gemini(context_prompt)
         
         if refresh:
-            await context_collection.delete_many({"data.sensor_id": sensor_id})
+            await context_collection.delete_many({"data.sensor_id": sensor_id, "data.user_id": user_id})
         
         document_id = await save_to_mongodb("location_analysis", {
             "sensor_id": sensor_id,
+            "user_id": user_id,
             "sensor_name": sensor_doc["name"],
             "input": input_payload,
             "output": context_data
@@ -103,6 +108,8 @@ async def analyze_context(sensor_id: str, refresh: bool = False):
         
         return ContextAnalysisResponse(
             id=document_id,
+            user_id=user_id,
+            sensor_id=sensor_id,
             **context_data
         )
     except Exception as e:
@@ -134,7 +141,7 @@ async def generate_recommendations(request: RecommendationRequest):
     
     try:
         existing_context = await context_collection.find_one(
-            {"data.sensor_id": request.sensor_id},
+            {"data.sensor_id": request.sensor_id, "data.user_id": request.user_id},
             sort=[("timestamp", -1)]
         )
         
@@ -151,6 +158,7 @@ async def generate_recommendations(request: RecommendationRequest):
             
             await save_to_mongodb("location_analysis", {
                 "sensor_id": request.sensor_id,
+                "user_id": request.user_id,
                 "sensor_name": sensor_doc["name"],
                 "input": input_payload,
                 "output": context_data
@@ -190,6 +198,7 @@ async def generate_recommendations(request: RecommendationRequest):
         
         document_id = await save_to_mongodb("crop_recommendations", {
             "sensor_id": request.sensor_id,
+            "user_id": request.user_id,
             "sensor_name": sensor_doc["name"],
             "input": input_payload,
             "context_data": context_data,
@@ -198,6 +207,8 @@ async def generate_recommendations(request: RecommendationRequest):
         
         return RecommendationResponse(
             id=document_id,
+            user_id=request.user_id,
+            sensor_id=request.sensor_id,
             recommendations=output["recommendations"]
         )
     except Exception as e:
@@ -322,13 +333,13 @@ async def get_recommendation_history(sensor_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
 
 @router.get("/history/all")
-async def get_all_recommendation_history():
+async def get_all_recommendation_history(user_id: str):
     db = mongodb.get_database()
     recommendations_collection = db["crop_recommendations"]
     sensors_collection = db["sensor_locations"]
     
     try:
-        history_cursor = recommendations_collection.find().sort("timestamp", -1)
+        history_cursor = recommendations_collection.find({"data.user_id": user_id}).sort("timestamp", -1)
         
         history = []
         async for doc in history_cursor:
@@ -381,8 +392,13 @@ async def get_recommendation_session(recommendation_id: str):
     if not recommendations:
         raise HTTPException(status_code=404, detail="No recommendations in this session")
     
+    user_id = recommendation_doc["data"].get("user_id", "")
+    sensor_id = recommendation_doc["data"].get("sensor_id", "")
+    
     return RecommendationResponse(
         id=str(recommendation_doc["_id"]),
+        user_id=user_id,
+        sensor_id=sensor_id,
         recommendations=recommendations
     )
 

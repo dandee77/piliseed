@@ -10,7 +10,11 @@ import { HistoryDetailPage } from './pages/HistoryDetailPage';
 import { HistoryCropDetail } from './pages/HistoryCropDetail';
 import { SettingsPage } from './pages/SettingsPage';
 import { ExpandableNavBar } from './components/ExpandableNavBar';
+import { LoginScreen } from './components/LoginScreen';
+import { UserProvider, useUser } from './contexts/UserContext';
+
 function AnimatedRoutes() {
+  const { user, setUser } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('home');
@@ -53,6 +57,11 @@ function AnimatedRoutes() {
       navigate('/');
     }
   };
+  
+  // Show login screen if no user (after all hooks are called)
+  if (!user) {
+    return <LoginScreen onLogin={setUser} />;
+  }
 
   return <>
       <AnimatePresence mode="wait">
@@ -75,11 +84,13 @@ function AnimatedRoutes() {
 }
 export function App() {
   return <BrowserRouter>
-      <div className="w-full min-h-screen bg-gray-50" style={{
-      maxWidth: '430px',
-      margin: '0 auto'
-    }}>
-        <AnimatedRoutes />
-      </div>
+      <UserProvider>
+        <div className="w-full min-h-screen bg-gray-50" style={{
+        maxWidth: '430px',
+        margin: '0 auto'
+      }}>
+          <AnimatedRoutes />
+        </div>
+      </UserProvider>
     </BrowserRouter>;
 }

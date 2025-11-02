@@ -5,6 +5,7 @@ import { ArrowLeftIcon, RefreshCwIcon } from 'lucide-react';
 import { FarmerForm } from '../components/FarmerForm';
 import { CropCard } from '../components/CropCard';
 import { API_BASE_URL } from '../config';
+import { useUser } from '../contexts/UserContext';
 
 interface CropRecommendation {
   crop: string;
@@ -45,6 +46,7 @@ interface FarmerFormData {
 export function CropsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useUser();
   const [recommendations, setRecommendations] = useState<CropRecommendation[] | null>(null);
   const [recommendationId, setRecommendationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,11 +59,11 @@ export function CropsPage() {
   }, [id]);
 
   const checkExistingRecommendations = async () => {
-    if (!id) return;
+    if (!id || !user) return;
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_BASE_URL}/recommendations/${id}/latest`);
+      const response = await fetch(`${API_BASE_URL}/recommendations/${id}/latest?user_id=${user.user_id}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -89,7 +91,7 @@ export function CropsPage() {
   };
 
   const handleFormSubmit = async (formData: FarmerFormData) => {
-    if (!id) return;
+    if (!id || !user) return;
 
     try {
       setIsGenerating(true);
@@ -102,6 +104,7 @@ export function CropsPage() {
         },
         body: JSON.stringify({
           sensor_id: id,
+          user_id: user.user_id,
           farmer: formData,
         }),
       });

@@ -140,18 +140,18 @@ async def delete_sensor_location(sensor_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Sensor location not found")
     
-    context_collection = db[f"sensor_{sensor_id}_context_analysis"]
-    await context_collection.drop()
+    context_collection = db["location_analysis"]
+    context_result = await context_collection.delete_many({"data.sensor_id": sensor_id})
     
-    recommendations_collection = db[f"sensor_{sensor_id}_crop_recommendations"]
-    await recommendations_collection.drop()
+    recommendations_collection = db["crop_recommendations"]
+    recommendations_result = await recommendations_collection.delete_many({"data.sensor_id": sensor_id})
     
     return {
         "message": f"Sensor {sensor_id} and all associated data deleted successfully",
-        "deleted_collections": [
-            "sensor_locations",
-            f"sensor_{sensor_id}_context_analysis",
-            f"sensor_{sensor_id}_crop_recommendations"
-        ]
+        "deleted_counts": {
+            "sensor_location": result.deleted_count,
+            "context_analysis": context_result.deleted_count,
+            "recommendations": recommendations_result.deleted_count
+        }
     }
 

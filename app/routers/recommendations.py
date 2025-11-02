@@ -19,7 +19,7 @@ router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 async def analyze_context(sensor_id: str, refresh: bool = False):
     db = mongodb.get_database()
     sensors_collection = db["sensor_locations"]
-    context_collection = db[f"sensor_{sensor_id}_context_analysis"]
+    context_collection = db["location_analysis"]
     
     try:
         sensor_doc = await sensors_collection.find_one({"_id": ObjectId(sensor_id)})
@@ -64,7 +64,7 @@ async def analyze_context(sensor_id: str, refresh: bool = False):
         if refresh:
             await context_collection.delete_many({"data.sensor_id": sensor_id})
         
-        document_id = await save_to_mongodb(f"sensor_{sensor_id}_context_analysis", {
+        document_id = await save_to_mongodb("location_analysis", {
             "sensor_id": sensor_id,
             "sensor_name": sensor_doc["name"],
             "input": input_payload,
@@ -110,7 +110,7 @@ async def generate_recommendations(request: RecommendationRequest):
         
         context_data = call_gemini(context_prompt)
         
-        await save_to_mongodb(f"sensor_{request.sensor_id}_context_analysis", {
+        await save_to_mongodb("location_analysis", {
             "sensor_id": request.sensor_id,
             "sensor_name": sensor_doc["name"],
             "input": input_payload,
@@ -143,7 +143,7 @@ async def generate_recommendations(request: RecommendationRequest):
                 recs = []
             output = {"recommendations": recs}
         
-        document_id = await save_to_mongodb(f"sensor_{request.sensor_id}_crop_recommendations", {
+        document_id = await save_to_mongodb("crop_recommendations", {
             "sensor_id": request.sensor_id,
             "sensor_name": sensor_doc["name"],
             "input": input_payload,
@@ -161,16 +161,15 @@ async def generate_recommendations(request: RecommendationRequest):
 @router.delete("/{sensor_id}/context-analysis")
 async def delete_context_analysis(sensor_id: str):
     db = mongodb.get_database()
-    collection_name = f"sensor_{sensor_id}_context_analysis"
+    collection = db["location_analysis"]
     
     try:
-        collection = db[collection_name]
         result = await collection.delete_many({"data.sensor_id": sensor_id})
         
         return {
             "message": f"Deleted {result.deleted_count} context analysis records for sensor {sensor_id}",
             "deleted_count": result.deleted_count,
-            "collection": collection_name
+            "collection": "location_analysis"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete context analysis: {str(e)}")
@@ -178,16 +177,15 @@ async def delete_context_analysis(sensor_id: str):
 @router.delete("/{sensor_id}/recommendations")
 async def delete_recommendations(sensor_id: str):
     db = mongodb.get_database()
-    collection_name = f"sensor_{sensor_id}_crop_recommendations"
+    collection = db["crop_recommendations"]
     
     try:
-        collection = db[collection_name]
         result = await collection.delete_many({"data.sensor_id": sensor_id})
         
         return {
             "message": f"Deleted {result.deleted_count} recommendation records for sensor {sensor_id}",
             "deleted_count": result.deleted_count,
-            "collection": collection_name
+            "collection": "crop_recommendations"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete recommendations: {str(e)}")
@@ -197,10 +195,10 @@ async def delete_all_sensor_data(sensor_id: str):
     db = mongodb.get_database()
     
     try:
-        context_collection = db[f"sensor_{sensor_id}_context_analysis"]
+        context_collection = db["location_analysis"]
         context_result = await context_collection.delete_many({"data.sensor_id": sensor_id})
         
-        recommendations_collection = db[f"sensor_{sensor_id}_crop_recommendations"]
+        recommendations_collection = db["crop_recommendations"]
         recommendations_result = await recommendations_collection.delete_many({"data.sensor_id": sensor_id})
         
         total_deleted = context_result.deleted_count + recommendations_result.deleted_count

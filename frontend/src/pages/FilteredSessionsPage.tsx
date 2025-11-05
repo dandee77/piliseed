@@ -69,18 +69,19 @@ export function FilteredSessionsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-          <p className="text-gray-600">Loading filtered sessions...</p>
-        </div>
+      <div className="min-h-screen bg-green-50 flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          className="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full"
+        />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-green-50 flex items-center justify-center p-6">
         <div className="bg-white rounded-3xl shadow-lg p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">⚠️</span>
@@ -99,33 +100,32 @@ export function FilteredSessionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="flex flex-col h-full space-y-5 px-5">
-        {/* Header */}
-        <div className="pt-12 pb-4 space-y-3">
-          <button
+    <div className="min-h-screen bg-green-50 pb-32">
+      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md shadow-sm">
+        <div className="px-5 py-4 flex items-center gap-4">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => navigate(`/history/${sessionId}`)}
-            className="flex items-center gap-2 text-green-600 hover:text-green-700 transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <ArrowLeftIcon className="w-5 h-5" />
-            <span className="font-medium">Back to Session</span>
-          </button>
-          
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 rounded-2xl">
-              <FilterIcon className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Filtered Results</h1>
-              <p className="text-sm text-gray-600">
-                {filteredSessions.length} personalized {filteredSessions.length === 1 ? 'filter' : 'filters'}
-              </p>
-            </div>
+            <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
+          </motion.button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900">Filtered Results</h1>
+            <p className="text-sm text-gray-500">
+              {filteredSessions.length} personalized {filteredSessions.length === 1 ? 'filter' : 'filters'}
+            </p>
+          </div>
+          <div className="p-3 bg-blue-100 rounded-xl">
+            <FilterIcon className="w-6 h-6 text-blue-600" />
           </div>
         </div>
+      </div>
 
-        {/* Empty State */}
-        {filteredSessions.length === 0 && (
+      {/* Empty State */}
+      {filteredSessions.length === 0 && (
+        <div className="px-5 pt-5">
           <div className="bg-white rounded-3xl shadow-md p-8 text-center">
             <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <FilterIcon className="w-10 h-10 text-blue-600" />
@@ -141,17 +141,21 @@ export function FilteredSessionsPage() {
               Create First Filter
             </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Filtered Sessions List */}
-        <div className="space-y-4">
-          {filteredSessions.map((session) => (
+      {/* Filtered Sessions List */}
+      <div className="px-5 pt-5 space-y-4">
+          {filteredSessions.map((session, index) => (
             <motion.div
               key={session.id}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => handleSessionClick(session.id)}
-              className="bg-white rounded-3xl shadow-md p-5 cursor-pointer hover:shadow-lg transition-shadow"
+              className="bg-white rounded-2xl shadow-lg p-5 cursor-pointer"
             >
               {/* Date & Crop Count */}
               <div className="flex items-center justify-between mb-3">
@@ -159,47 +163,49 @@ export function FilteredSessionsPage() {
                   <CalendarIcon className="w-4 h-4" />
                   <span>{formatDate(session.timestamp)}</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-100 rounded-full">
-                  <SproutIcon className="w-3.5 h-3.5 text-green-700" />
-                  <span className="text-xs font-semibold text-green-700">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 rounded-full">
+                  <SproutIcon className="w-3.5 h-3.5 text-blue-700" />
+                  <span className="text-xs font-semibold text-blue-700">
                     {session.crop_count} {session.crop_count === 1 ? 'crop' : 'crops'}
                   </span>
                 </div>
               </div>
 
               {/* Farmer Preferences */}
-              <div className="mb-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">🌾</span>
+              <div className="mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-2 bg-lime-100 rounded-lg">
+                    <span className="text-base">🌾</span>
+                  </div>
                   <span className="text-sm font-semibold text-gray-900">
                     {session.farmer_input.crop_category}
                   </span>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <span>💰</span>
-                    <span className="text-gray-700 font-medium">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-lime-50 p-2 rounded-lg border border-lime-100">
+                    <div className="text-xs text-lime-700 mb-0.5">Budget</div>
+                    <div className="text-xs font-bold text-lime-900">
                       {formatCurrency(session.farmer_input.budget_php)}
-                    </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span>📏</span>
-                    <span className="text-gray-700 font-medium">
+                  <div className="bg-lime-50 p-2 rounded-lg border border-lime-100">
+                    <div className="text-xs text-lime-700 mb-0.5">Land Size</div>
+                    <div className="text-xs font-bold text-lime-900">
                       {session.farmer_input.land_size_ha} ha
-                    </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span>⏰</span>
-                    <span className="text-gray-700 font-medium">
-                      {session.farmer_input.waiting_tolerance_days} days
-                    </span>
+                  <div className="bg-blue-50 p-2 rounded-lg border border-blue-100">
+                    <div className="text-xs text-blue-700 mb-0.5">Wait Time</div>
+                    <div className="text-xs font-bold text-blue-900">
+                      {session.farmer_input.waiting_tolerance_days}d
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span>👷</span>
-                    <span className="text-gray-700 font-medium">
-                      {session.farmer_input.manpower} {session.farmer_input.manpower === 1 ? 'worker' : 'workers'}
-                    </span>
+                  <div className="bg-blue-50 p-2 rounded-lg border border-blue-100">
+                    <div className="text-xs text-blue-700 mb-0.5">Workers</div>
+                    <div className="text-xs font-bold text-blue-900">
+                      {session.farmer_input.manpower}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -211,13 +217,13 @@ export function FilteredSessionsPage() {
                   {session.crops.map((crop, idx) => (
                     <span
                       key={idx}
-                      className="px-2.5 py-1 bg-green-50 text-green-700 text-xs rounded-full border border-green-200"
+                      className="px-2.5 py-1 bg-green-50 text-green-700 text-xs rounded-full border border-green-200 font-medium"
                     >
                       {crop}
                     </span>
                   ))}
                   {session.crop_count > 3 && (
-                    <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                    <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
                       +{session.crop_count - 3} more
                     </span>
                   )}
@@ -232,7 +238,6 @@ export function FilteredSessionsPage() {
               </div>
             </motion.div>
           ))}
-        </div>
       </div>
     </div>
   );

@@ -215,7 +215,7 @@ export function HistoryDetailPage() {
                   <SproutIcon className="w-4 h-4 text-purple-600" />
                 </div>
                 <div className="text-center">
-                  <div className="text-xs font-semibold text-gray-900">Filtered</div>
+                  <div className="text-xs font-semibold text-gray-900">History</div>
                   <div className="text-[10px] text-gray-500">Results</div>
                 </div>
               </motion.button>

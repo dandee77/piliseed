@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ArrowLeftIcon, SproutIcon } from 'lucide-react';
 import { CropCard } from '../components/CropCard';
 import { API_BASE_URL } from '../config';
@@ -98,18 +99,19 @@ export function FilterDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-          <p className="text-gray-600">Loading filtered crops...</p>
-        </div>
+      <div className="min-h-screen bg-green-50 flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          className="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full"
+        />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-green-50 flex items-center justify-center p-6">
         <div className="bg-white rounded-3xl shadow-lg p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">⚠️</span>
@@ -128,31 +130,30 @@ export function FilterDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="flex flex-col h-full space-y-5 px-5">
-        {/* Header */}
-        <div className="pt-12 pb-4 space-y-3">
-          <button
+    <div className="min-h-screen bg-green-50 pb-32">
+      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md shadow-sm">
+        <div className="px-5 py-4 flex items-center gap-4">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => navigate(`/history/${sessionId}/filters`)}
-            className="flex items-center gap-2 text-green-600 hover:text-green-700 transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <ArrowLeftIcon className="w-5 h-5" />
-            <span className="font-medium">Back to Filters</span>
-          </button>
-          
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-100 rounded-2xl">
-              <SproutIcon className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Personalized Results</h1>
-              <p className="text-xs text-gray-600">{formatDate(timestamp)}</p>
-            </div>
+            <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
+          </motion.button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900">Filtered Crops</h1>
+            <p className="text-sm text-gray-500">{formatDate(timestamp)}</p>
+          </div>
+          <div className="p-3 bg-green-100 rounded-xl">
+            <SproutIcon className="w-6 h-6 text-green-600" />
           </div>
         </div>
+      </div>
 
+      <div className="px-5 pt-5 space-y-5">
         {/* Filter Explanation */}
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-3xl p-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
           <div className="flex items-start gap-3">
             <div className="text-2xl mt-0.5">💡</div>
             <div>
@@ -166,43 +167,40 @@ export function FilterDetailPage() {
 
         {/* Farmer Preferences Card */}
         {farmerInput && (
-          <div className="bg-white rounded-3xl shadow-md p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <div className="bg-white rounded-2xl shadow-lg p-5">
+            <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
               <span>🎯</span>
               Your Preferences
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-green-50 rounded-2xl p-3">
-                <div className="text-xs text-gray-600 mb-1">Category</div>
-                <div className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+              <div className="bg-lime-50 rounded-xl p-3 border border-lime-100">
+                <div className="text-xs text-lime-700 mb-1">Category</div>
+                <div className="text-sm font-bold text-lime-900 flex items-center gap-1.5">
                   <span>🌾</span>
                   {farmerInput.crop_category}
                 </div>
               </div>
-              <div className="bg-green-50 rounded-2xl p-3">
-                <div className="text-xs text-gray-600 mb-1">Budget</div>
-                <div className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                  <span>💰</span>
+              <div className="bg-lime-50 rounded-xl p-3 border border-lime-100">
+                <div className="text-xs text-lime-700 mb-1">Budget</div>
+                <div className="text-sm font-bold text-lime-900">
                   {formatCurrency(farmerInput.budget_php)}
                 </div>
               </div>
-              <div className="bg-green-50 rounded-2xl p-3">
-                <div className="text-xs text-gray-600 mb-1">Land Size</div>
-                <div className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                  <span>📏</span>
+              <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                <div className="text-xs text-blue-700 mb-1">Land Size</div>
+                <div className="text-sm font-bold text-blue-900">
                   {farmerInput.land_size_ha} hectares
                 </div>
               </div>
-              <div className="bg-green-50 rounded-2xl p-3">
-                <div className="text-xs text-gray-600 mb-1">Wait Time</div>
-                <div className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                  <span>⏰</span>
+              <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                <div className="text-xs text-blue-700 mb-1">Wait Time</div>
+                <div className="text-sm font-bold text-blue-900">
                   {farmerInput.waiting_tolerance_days} days
                 </div>
               </div>
-              <div className="bg-green-50 rounded-2xl p-3 col-span-2">
-                <div className="text-xs text-gray-600 mb-1">Available Workers</div>
-                <div className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+              <div className="bg-green-50 rounded-xl p-3 border border-green-100 col-span-2">
+                <div className="text-xs text-green-700 mb-1">Available Workers</div>
+                <div className="text-sm font-bold text-green-900 flex items-center gap-1.5">
                   <span>👷</span>
                   {farmerInput.manpower} {farmerInput.manpower === 1 ? 'worker' : 'workers'}
                 </div>
@@ -212,7 +210,7 @@ export function FilterDetailPage() {
         )}
 
         {/* Crops Info */}
-        <div className="bg-white rounded-3xl shadow-md p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-4">
           <p className="text-sm text-gray-600">
             <span className="font-bold text-green-600">{recommendations.length}</span> {recommendations.length === 1 ? 'crop' : 'crops'} matched your criteria:
           </p>

@@ -319,3 +319,134 @@ CRITICAL REQUIREMENTS:
 
 Output ONLY valid JSON. No markdown, no explanations outside the JSON structure.
 """
+
+FILTER_RECOMMENDATION_PROMPT = r"""
+You are an expert agronomist AI system that filters and personalizes crop recommendations based on farmer preferences.
+
+ORIGINAL RECOMMENDATIONS (Names Only):
+{available_crops}
+
+CONTEXTUAL DATA:
+{context_data}
+
+FARMER PREFERENCES:
+{farmer_input}
+
+Your task is to select 1-5 crops from the available list that BEST match the farmer's preferences. For each selected crop, provide complete details with enhanced information that specifically addresses how it fits the farmer's needs.
+
+Return a JSON object with these keys:
+{{
+  "filter_explanation": "string (2-3 sentences explaining the filtering logic and why these specific crops were chosen)",
+  "recommendations": [array of 1-5 crop objects - see format below]
+}}
+
+Each recommendation object must include ALL these fields:
+
+{{
+  "crop": "string (specific variety if applicable, e.g., 'Ampalaya - Jade 20')",
+  "searchable_name": "string (common English name for Wikipedia search)",
+  "scientific_name": "string",
+  "category": "string (Vegetables/Fruits/Cereals/Legumes/Cash/Fodder/Herbs/Ornamentals)",
+  
+  "scores": {{
+    "overall_score": "number 0.0-1.0 (recalculated based on farmer preferences)",
+    "confidence_pct": "integer 0-100",
+    "env_score": "number 0.0-1.0",
+    "econ_score": "number 0.0-1.0", 
+    "time_fit_score": "number 0.0-1.0 (heavily weighted based on waiting_tolerance_days)",
+    "season_score": "number 0.0-1.0",
+    "labor_score": "number 0.0-1.0 (based on manpower)",
+    "risk_score": "number 0.0-1.0",
+    "market_score": "number 0.0-1.0"
+  }},
+  
+  "growth_requirements": {{
+    "crop_cycle_days": "integer",
+    "water_requirement": "string (Low/Moderate/High, with liters/plant/day if applicable)",
+    "sunlight_hours_daily": "integer",
+    "optimal_temp_range_c": "string (e.g., 20-30)",
+    "soil_ph_range": "string (e.g., 5.5-6.5)",
+    "soil_type_preferred": "string"
+  }},
+  
+  "tolerances": {{
+    "drought_tolerance": "string (Low/Moderate/High)",
+    "flood_tolerance": "string (Low/Moderate/High)",
+    "salinity_tolerance": "string (Low/Moderate/High)",
+    "frost_tolerance": "string (Low/Moderate/High)",
+    "shade_tolerance": "string (Low/Moderate/High)",
+    "pest_disease_resistance": "string (Low/Moderate/High)"
+  }},
+  
+  "management": {{
+    "management_intensity": "string (Low/Moderate/High)",
+    "labor_hours_per_ha_per_week": "number (adjusted for farmer's manpower)",
+    "organic_suitable": "boolean",
+    "mechanization_possible": "boolean",
+    "requires_irrigation": "boolean",
+    "requires_trellising": "boolean"
+  }},
+  
+  "economics": {{
+    "estimated_cost_php": "number (MUST be scaled to farmer's land_size_ha and within budget_php)",
+    "cost_breakdown": {{
+      "seeds_php": "number",
+      "fertilizer_php": "number",
+      "pesticides_php": "number",
+      "labor_php": "number",
+      "irrigation_php": "number",
+      "others_php": "number"
+    }},
+    "estimated_yield_kg_per_ha": "number",
+    "estimated_revenue_php": "number (scaled to farmer's land_size_ha)",
+    "profit_margin_pct": "number",
+    "roi_pct": "number",
+    "break_even_days": "integer"
+  }},
+  
+  "market_strategy": {{
+    "best_selling_locations": ["array of specific markets/cities"],
+    "current_market_price_php_per_kg": "number",
+    "projected_harvest_price_php_per_kg": "number",
+    "price_volatility": "string (Low/Moderate/High)",
+    "demand_level": "string (Low/Moderate/High/Very High)",
+    "export_potential": "boolean",
+    "buyer_types": ["array: e.g., Wet market, Supermarket, Restaurant, Processor, Exporter"]
+  }},
+  
+  "planting_schedule": {{
+    "recommended_planting_date": "string (e.g., November 15-30, 2025)",
+    "expected_harvest_date": "string (MUST be within waiting_tolerance_days)",
+    "succession_planting_possible": "boolean",
+    "intercropping_compatible_with": ["array of crop names from available list"]
+  }},
+  
+  "risk_assessment": {{
+    "weather_risks": ["array of specific risks based on season"],
+    "pest_disease_risks": ["array of likely threats"],
+    "market_risks": ["array of economic risks"],
+    "mitigation_strategies": ["array of 2-3 actionable recommendations tailored to farmer's resources"]
+  }},
+  
+  "reasoning": "string (3-4 sentences explaining WHY this crop was selected for THIS SPECIFIC farmer, referencing their budget, land size, manpower, waiting time, and category preference)"
+}}
+
+CRITICAL FILTERING REQUIREMENTS:
+1. ONLY select crops from the available_crops list - no other crops allowed
+2. Return 1-5 crops maximum, ranked by how well they match farmer preferences
+3. Category MUST match farmer's crop_category preference if specified
+4. Crop cycle MUST fit within waiting_tolerance_days (strict requirement)
+5. Total cost MUST be within budget_php and scaled to land_size_ha
+6. Consider manpower for labor_hours calculations
+7. Recalculate all scores to reflect farmer-specific fit
+8. Enhance reasoning to explicitly show why it matches their input
+9. If no crops match all criteria, select the best 1-2 with explanation
+10. All financial figures must be realistically scaled to farmer's land size
+
+The filter_explanation should clearly state:
+- Which criteria were prioritized
+- Why certain crops were excluded
+- How the selected crops specifically meet the farmer's needs
+
+Output ONLY valid JSON. No markdown, no explanations outside the JSON structure.
+"""

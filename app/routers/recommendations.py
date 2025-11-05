@@ -8,12 +8,14 @@ from app.models.schemas import (
     RecommendationResponse,
     SensorData,
     HardwareSensorData,
-    AutoRecommendationResponse
+    AutoRecommendationResponse,
+    FilterRecommendationRequest,
+    FilterRecommendationResponse
 )
 from app.services.gemini_service import call_gemini
 from app.services.database_service import save_to_mongodb
 from app.services.wikipedia_service import fetch_wikipedia_thumbnail
-from app.services.prompts import CONTEXT_ANALYSIS_PROMPT, RECOMMENDATION_PROMPT, CHAT_PROMPT, HARDWARE_RECOMMENDATION_PROMPT
+from app.services.prompts import CONTEXT_ANALYSIS_PROMPT, RECOMMENDATION_PROMPT, CHAT_PROMPT, HARDWARE_RECOMMENDATION_PROMPT, FILTER_RECOMMENDATION_PROMPT
 from app.core.config import DEFAULT_SENSOR_VALUES, START_MONTH
 from app.core.database import mongodb
 
@@ -649,3 +651,170 @@ async def auto_generate_recommendations(sensor_id: str, sensor_data: HardwareSen
     except Exception as e:
         logger.error(f"Auto-recommendation error for hardware sensor {sensor_id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to generate recommendations: {str(e)}")
+
+@router.post("/session/{recommendation_id}/filter", response_model=FilterRecommendationResponse)
+async def filter_recommendations(recommendation_id: str, request: FilterRecommendationRequest):
+    """Filter recommendations from a session based on farmer preferences."""
+    db = mongodb.get_database()
+    recommendations_collection = db["crop_recommendations"]
+    context_collection = db["location_analysis"]
+    
+    try:
+        recommendation_doc = await recommendations_collection.find_one({"_id": ObjectId(recommendation_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid recommendation_id format")
+    
+    if not recommendation_doc:
+        raise HTTPException(status_code=404, detail="Recommendation session not found")
+    
+    # Get original recommendations
+    output = recommendation_doc.get("data", {}).get("output", {})
+    original_recommendations = output.get("recommendations", [])
+    
+    if not original_recommendations:
+        raise HTTPException(status_code=404, detail="No recommendations found in this session")
+    
+    # Extract only crop names
+    available_crops = [rec.get("crop") for rec in original_recommendations if rec.get("crop")]
+    
+    if not available_crops:
+        raise HTTPException(status_code=404, detail="No valid crop names found")
+    
+    # Get context data (check both keys)
+    context_data = recommendation_doc.get("data", {}).get("context_data") or recommendation_doc.get("data", {}).get("context", {})
+    
+    if not context_data:
+        # Try to fetch from context collection
+        sensor_id = recommendation_doc.get("data", {}).get("sensor_id")
+        if sensor_id:
+            existing_context = await context_collection.find_one(
+                {"data.sensor_id": sensor_id},
+                sort=[("timestamp", -1)]
+            )
+            if existing_context and "data" in existing_context:
+                context_data = existing_context["data"].get("output", {})
+    
+    # Prepare input for AI
+    farmer_input = request.farmer.dict()
+    
+    filter_input = {
+        "available_crops": available_crops,
+        "context_data": json.dumps(context_data) if context_data else "{}",
+        "farmer_input": json.dumps(farmer_input)
+    }
+    
+    try:
+        prompt = FILTER_RECOMMENDATION_PROMPT.format(**filter_input)
+        filter_response = call_gemini(prompt)
+        
+        filter_json = filter_response
+        filter_explanation = filter_json.get("filter_explanation", "Filtered based on your preferences.")
+        recommendations = filter_json.get("recommendations", [])
+        
+        if not recommendations:
+            raise HTTPException(status_code=404, detail="No crops matched your criteria")
+        
+        if len(recommendations) > 5:
+            recommendations = recommendations[:5]
+        
+        # Fetch images for filtered crops
+        for rec in recommendations:
+            searchable_name = rec.get("searchable_name", rec.get("crop"))
+            if searchable_name:
+                try:
+                    thumbnail_url = await fetch_wikipedia_thumbnail(searchable_name)
+                    rec["image_url"] = thumbnail_url
+                except Exception as img_error:
+                    logger.error(f"Failed to fetch image for {searchable_name}: {str(img_error)}")
+                    rec["image_url"] = None
+        
+        # Save filtered recommendations
+        storage_data = {
+            "session_id": recommendation_id,
+            "farmer_input": farmer_input,
+            "filter_explanation": filter_explanation,
+            "available_crops": available_crops,
+            "output": {
+                "recommendations": recommendations
+            }
+        }
+        
+        document_id = await save_to_mongodb("filtered_recommendations", storage_data)
+        
+        return FilterRecommendationResponse(
+            id=document_id,
+            session_id=recommendation_id,
+            filter_explanation=filter_explanation,
+            farmer_input=request.farmer,
+            recommendations=recommendations
+        )
+        
+    except HTTPException:
+        raise
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parsing error for filter: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to parse AI response: {str(e)}")
+    except Exception as e:
+        logger.error(f"Filter error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to filter recommendations: {str(e)}")
+
+@router.get("/session/{session_id}/filters")
+async def get_filtered_sessions(session_id: str):
+    """Get all filtered recommendation sessions for a given original session."""
+    db = mongodb.get_database()
+    filtered_collection = db["filtered_recommendations"]
+    
+    try:
+        filtered_sessions = []
+        cursor = filtered_collection.find(
+            {"data.session_id": session_id}
+        ).sort("timestamp", -1)
+        
+        async for doc in cursor:
+            data = doc.get("data", {})
+            farmer_input = data.get("farmer_input", {})
+            output = data.get("output", {})
+            recommendations = output.get("recommendations", [])
+            
+            filtered_sessions.append({
+                "id": str(doc["_id"]),
+                "timestamp": doc.get("timestamp"),
+                "filter_explanation": data.get("filter_explanation", ""),
+                "farmer_input": farmer_input,
+                "crop_count": len(recommendations),
+                "crops": [rec.get("crop") for rec in recommendations[:3]]  # Preview first 3
+            })
+        
+        return {"session_id": session_id, "filtered_sessions": filtered_sessions}
+        
+    except Exception as e:
+        logger.error(f"Error fetching filtered sessions: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch filtered sessions: {str(e)}")
+
+@router.get("/filter/{filter_id}")
+async def get_filter_detail(filter_id: str):
+    """Get detailed information about a specific filtered recommendation."""
+    db = mongodb.get_database()
+    filtered_collection = db["filtered_recommendations"]
+    
+    try:
+        filter_doc = await filtered_collection.find_one({"_id": ObjectId(filter_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid filter_id format")
+    
+    if not filter_doc:
+        raise HTTPException(status_code=404, detail="Filtered recommendation not found")
+    
+    data = filter_doc.get("data", {})
+    output = data.get("output", {})
+    recommendations = output.get("recommendations", [])
+    
+    return {
+        "id": str(filter_doc["_id"]),
+        "session_id": data.get("session_id"),
+        "timestamp": filter_doc.get("timestamp"),
+        "filter_explanation": data.get("filter_explanation", ""),
+        "farmer_input": data.get("farmer_input", {}),
+        "recommendations": recommendations
+    }
+

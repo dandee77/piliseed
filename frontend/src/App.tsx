@@ -7,6 +7,9 @@ import { HistoryPage } from './pages/HistoryPage';
 import { HistoryDetailPage } from './pages/HistoryDetailPage';
 import { HistoryContextPage } from './pages/HistoryContextPage';
 import { HistoryCropDetail } from './pages/HistoryCropDetail';
+import { FilteredSessionsPage } from './pages/FilteredSessionsPage';
+import { FilterDetailPage } from './pages/FilterDetailPage';
+import { FilterCropDetail } from './pages/FilterCropDetail';
 import SettingsPage from './pages/SettingsPage';
 import { ChatPage } from './pages/ChatPage';
 import { ExpandableNavBar } from './components/ExpandableNavBar';
@@ -62,6 +65,9 @@ function AnimatedRoutes() {
           <Route path="/history/:sessionId" element={<HistoryDetailPage />} />
           <Route path="/history/:sessionId/context" element={<HistoryContextPage />} />
           <Route path="/history/:sessionId/crops/:cropIndex" element={<HistoryCropDetail />} />
+          <Route path="/history/:sessionId/filters" element={<FilteredSessionsPage />} />
+          <Route path="/history/filter/:filterId" element={<FilterDetailPage />} />
+          <Route path="/history/filter/:filterId/crop/:cropIndex" element={<FilterCropDetail />} />
         </Routes>
       </AnimatePresence>
       {!shouldHideNavbar && (

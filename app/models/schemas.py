@@ -156,3 +156,14 @@ class AutoRecommendationResponse(BaseModel):
     top_3_crops: List[str]
     total_crops_generated: int
     message: str
+
+class FilterRecommendationRequest(BaseModel):
+    session_id: str
+    farmer: FarmerInput
+
+class FilterRecommendationResponse(BaseModel):
+    id: str
+    session_id: str
+    filter_explanation: str
+    farmer_input: FarmerInput
+    recommendations: List[CropRecommendation]

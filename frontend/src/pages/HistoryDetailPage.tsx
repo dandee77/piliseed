@@ -40,6 +40,7 @@ export function HistoryDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
   const [filterData, setFilterData] = useState({
     crop_category: 'Vegetables',
     budget_php: 50000,
@@ -78,6 +79,38 @@ export function HistoryDetailPage() {
 
   const handleCropClick = (index: number) => {
     navigate(`/history/${sessionId}/crops/${index}`);
+  };
+
+  const handleApplyFilter = async () => {
+    if (!sessionId) return;
+
+    try {
+      setIsFiltering(true);
+      const response = await fetch(`${API_BASE_URL}/recommendations/session/${sessionId}/filter`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          farmer: filterData,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to apply filter');
+      }
+
+      const data = await response.json();
+      // Navigate to the filtered results page
+      navigate(`/history/filter/${data.id}`);
+      setShowFilterModal(false);
+    } catch (err) {
+      console.error('Error applying filter:', err);
+      alert('Failed to apply filter. Please try again.');
+    } finally {
+      setIsFiltering(false);
+    }
   };
 
   if (isLoading) {
@@ -141,19 +174,19 @@ export function HistoryDetailPage() {
           </motion.div>
         ) : (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(`/history/${sessionId}/context`)}
-                className="bg-white rounded-xl shadow-lg p-4 flex items-center gap-3 border-2 border-lime-200 hover:border-lime-400 transition-colors"
+                className="bg-white rounded-xl shadow-lg p-3 flex flex-col items-center gap-2 border-2 border-lime-200 hover:border-lime-400 transition-colors"
               >
                 <div className="p-2 bg-lime-100 rounded-lg">
-                  <MapPinIcon className="w-5 h-5 text-lime-600" />
+                  <MapPinIcon className="w-4 h-4 text-lime-600" />
                 </div>
-                <div className="text-left">
-                  <div className="text-sm font-semibold text-gray-900">Context</div>
-                  <div className="text-xs text-gray-500">Location Analysis</div>
+                <div className="text-center">
+                  <div className="text-xs font-semibold text-gray-900">Context</div>
+                  <div className="text-[10px] text-gray-500">Analysis</div>
                 </div>
               </motion.button>
 
@@ -161,14 +194,29 @@ export function HistoryDetailPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setShowFilterModal(true)}
-                className="bg-white rounded-xl shadow-lg p-4 flex items-center gap-3 border-2 border-blue-200 hover:border-blue-400 transition-colors"
+                className="bg-white rounded-xl shadow-lg p-3 flex flex-col items-center gap-2 border-2 border-blue-200 hover:border-blue-400 transition-colors"
               >
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <FilterIcon className="w-5 h-5 text-blue-600" />
+                  <FilterIcon className="w-4 h-4 text-blue-600" />
                 </div>
-                <div className="text-left">
-                  <div className="text-sm font-semibold text-gray-900">Filter</div>
-                  <div className="text-xs text-gray-500">Personalize</div>
+                <div className="text-center">
+                  <div className="text-xs font-semibold text-gray-900">Filter</div>
+                  <div className="text-[10px] text-gray-500">Personalize</div>
+                </div>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => navigate(`/history/${sessionId}/filters`)}
+                className="bg-white rounded-xl shadow-lg p-3 flex flex-col items-center gap-2 border-2 border-purple-200 hover:border-purple-400 transition-colors"
+              >
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <SproutIcon className="w-4 h-4 text-purple-600" />
+                </div>
+                <div className="text-center">
+                  <div className="text-xs font-semibold text-gray-900">Filtered</div>
+                  <div className="text-[10px] text-gray-500">Results</div>
                 </div>
               </motion.button>
             </div>
@@ -325,11 +373,21 @@ export function HistoryDetailPage() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowFilterModal(false)}
-                  className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                  onClick={handleApplyFilter}
+                  disabled={isFiltering}
+                  className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FilterIcon className="w-4 h-4" />
-                  Apply Filters
+                  {isFiltering ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Filtering...
+                    </>
+                  ) : (
+                    <>
+                      <FilterIcon className="w-4 h-4" />
+                      Apply Filters
+                    </>
+                  )}
                 </motion.button>
               </div>
             </motion.div>

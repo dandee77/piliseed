@@ -397,6 +397,40 @@ async def get_recommendation_session(recommendation_id: str):
         recommendations=recommendations
     )
 
+@router.get("/session/{recommendation_id}/context")
+async def get_session_context(recommendation_id: str):
+    db = mongodb.get_database()
+    recommendations_collection = db["crop_recommendations"]
+    
+    try:
+        recommendation_doc = await recommendations_collection.find_one({"_id": ObjectId(recommendation_id)})
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid recommendation_id format: {str(e)}")
+    
+    if not recommendation_doc:
+        raise HTTPException(status_code=404, detail="Recommendation session not found")
+    
+    if "data" not in recommendation_doc:
+        raise HTTPException(status_code=404, detail="Recommendation session has no data")
+    
+    # Check both possible key names for context data
+    # "context_data" is used by manual recommendations
+    # "context" is used by hardware auto-recommendations
+    context_data = recommendation_doc["data"].get("context_data") or recommendation_doc["data"].get("context", {})
+    sensor_name = recommendation_doc["data"].get("sensor_name", "")
+    timestamp = recommendation_doc.get("timestamp", "")
+    
+    if not context_data:
+        data_keys = list(recommendation_doc["data"].keys())
+        raise HTTPException(status_code=404, detail=f"No context analysis found for this session. Available keys: {data_keys}")
+    
+    return {
+        "id": str(recommendation_doc["_id"]),
+        "sensor_name": sensor_name,
+        "timestamp": timestamp,
+        "context_analysis": context_data
+    }
+
 @router.post("/{sensor_id}/chat")
 async def chat_with_ai(sensor_id: str, message: dict):
     db = mongodb.get_database()

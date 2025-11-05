@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeftIcon, SproutIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeftIcon, SproutIcon, MapPinIcon, FilterIcon, XIcon } from 'lucide-react';
 import { CropCard } from '../components/CropCard';
 import { API_BASE_URL } from '../config';
 
@@ -39,6 +39,14 @@ export function HistoryDetailPage() {
   const [recommendations, setRecommendations] = useState<CropRecommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [filterData, setFilterData] = useState({
+    crop_category: 'Vegetables',
+    budget_php: 50000,
+    waiting_tolerance_days: 90,
+    land_size_ha: 1.0,
+    manpower: 3
+  });
 
   useEffect(() => {
     fetchSessionDetails();
@@ -133,6 +141,38 @@ export function HistoryDetailPage() {
           </motion.div>
         ) : (
           <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => navigate(`/history/${sessionId}/context`)}
+                className="bg-white rounded-xl shadow-lg p-4 flex items-center gap-3 border-2 border-lime-200 hover:border-lime-400 transition-colors"
+              >
+                <div className="p-2 bg-lime-100 rounded-lg">
+                  <MapPinIcon className="w-5 h-5 text-lime-600" />
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-semibold text-gray-900">Context</div>
+                  <div className="text-xs text-gray-500">Location Analysis</div>
+                </div>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowFilterModal(true)}
+                className="bg-white rounded-xl shadow-lg p-4 flex items-center gap-3 border-2 border-blue-200 hover:border-blue-400 transition-colors"
+              >
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <FilterIcon className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-semibold text-gray-900">Filter</div>
+                  <div className="text-xs text-gray-500">Personalize</div>
+                </div>
+              </motion.button>
+            </div>
+
             <div className="bg-white rounded-2xl shadow-lg p-4">
               <p className="text-sm text-gray-600">
                 Historical crop recommendations from this session:
@@ -155,6 +195,147 @@ export function HistoryDetailPage() {
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {showFilterModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center"
+            onClick={() => setShowFilterModal(false)}
+            style={{ maxWidth: '430px', margin: '0 auto', left: 0, right: 0 }}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-t-3xl w-full max-h-[90vh] flex flex-col"
+            >
+              <div className="bg-green-600 text-white px-5 py-4 rounded-t-3xl flex-shrink-0">
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="text-lg font-bold">Personalize Crops</h2>
+                  <button
+                    onClick={() => setShowFilterModal(false)}
+                    className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
+                  >
+                    <XIcon className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-xs text-white/90">Customize your farming preferences</p>
+              </div>
+
+              <div className="overflow-y-auto flex-1 px-5 py-5 space-y-4">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <SproutIcon className="w-4 h-4 text-green-600" />
+                    Crop Category
+                  </label>
+                  <select
+                    value={filterData.crop_category}
+                    onChange={(e) => setFilterData({ ...filterData, crop_category: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-green-500 transition-colors bg-white text-gray-900 text-sm"
+                  >
+                    <option value="Vegetables">🥬 Vegetables</option>
+                    <option value="Fruits">🍎 Fruits</option>
+                    <option value="Cereals">🌾 Cereals</option>
+                    <option value="Legumes">🫘 Legumes</option>
+                    <option value="Cash Crops">💰 Cash Crops</option>
+                    <option value="Fodder">🌿 Fodder</option>
+                    <option value="Herbs">🌱 Herbs</option>
+                    <option value="Ornamentals">🌸 Ornamentals</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    💵 Budget
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">₱</span>
+                    <input
+                      type="number"
+                      value={filterData.budget_php}
+                      onChange={(e) => setFilterData({ ...filterData, budget_php: Number(e.target.value) })}
+                      className="w-full pl-8 pr-3 py-2.5 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-green-500 transition-colors text-sm"
+                      min="1000"
+                      step="1000"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1.5">Total investment in Philippine Pesos</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    ⏱️ Waiting Tolerance
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={filterData.waiting_tolerance_days}
+                      onChange={(e) => setFilterData({ ...filterData, waiting_tolerance_days: Number(e.target.value) })}
+                      className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-green-500 transition-colors text-sm"
+                      min="30"
+                      max="365"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">days</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1.5">How long until harvest?</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    📏 Land Size
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={filterData.land_size_ha}
+                      onChange={(e) => setFilterData({ ...filterData, land_size_ha: Number(e.target.value) })}
+                      className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-green-500 transition-colors text-sm"
+                      min="0.1"
+                      step="0.1"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">hectares</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1.5">Total farmland available</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    👥 Available Manpower
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={filterData.manpower}
+                      onChange={(e) => setFilterData({ ...filterData, manpower: Number(e.target.value) })}
+                      className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-green-500 transition-colors text-sm"
+                      min="1"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">workers</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1.5">Number of farm workers</p>
+                </div>
+              </div>
+
+              <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowFilterModal(false)}
+                  className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <FilterIcon className="w-4 h-4" />
+                  Apply Filters
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -12,13 +12,6 @@ interface HistorySession {
   location: string;
   total_crops: number;
   planted_count: number;
-  farmer_input: {
-    crop_category: string;
-    budget_php: number;
-    waiting_tolerance_days: number;
-    land_size_ha: number;
-    manpower: number;
-  };
 }
 
 export function HistoryPage() {
@@ -67,15 +60,6 @@ export function HistoryPage() {
       minute: '2-digit',
       hour12: true,
     });
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
   };
 
   if (isLoading) {
@@ -171,37 +155,16 @@ export function HistoryPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div className="bg-gray-50 p-3 rounded-xl">
-                  <div className="text-xs text-gray-600 mb-1">Total Crops</div>
-                  <div className="text-lg font-bold text-gray-900">{session.total_crops}</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-lime-50 p-3 rounded-xl border border-lime-100">
+                  <div className="text-xs text-lime-700 mb-1">Total Crops</div>
+                  <div className="text-xl font-bold text-lime-900">{session.total_crops}</div>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-xl">
-                  <div className="text-xs text-gray-600 mb-1">Category</div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {session.farmer_input.crop_category}
+                <div className="bg-green-50 p-3 rounded-xl border border-green-100">
+                  <div className="text-xs text-green-700 mb-1">Sensor ID</div>
+                  <div className="text-sm font-mono text-green-900 truncate">
+                    {session.sensor_id.substring(0, 8)}...
                   </div>
-                </div>
-              </div>
-
-              <div className="border-t border-gray-100 pt-3 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Budget</span>
-                  <span className="font-medium text-gray-900">
-                    {formatCurrency(session.farmer_input.budget_php)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Land Size</span>
-                  <span className="font-medium text-gray-900">
-                    {session.farmer_input.land_size_ha} ha
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Waiting Tolerance</span>
-                  <span className="font-medium text-gray-900">
-                    {session.farmer_input.waiting_tolerance_days} days
-                  </span>
                 </div>
               </div>
             </motion.div>

@@ -160,10 +160,12 @@ class AutoRecommendationResponse(BaseModel):
 class FilterRecommendationRequest(BaseModel):
     session_id: str
     farmer: FarmerInput
+    user_uid: Optional[str] = None
 
 class FilterRecommendationResponse(BaseModel):
     id: str
     session_id: str
+    user_uid: str
     filter_explanation: str
     farmer_input: FarmerInput
     recommendations: List[CropRecommendation]

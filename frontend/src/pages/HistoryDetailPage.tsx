@@ -41,6 +41,7 @@ export function HistoryDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [hasFilteredSessions, setHasFilteredSessions] = useState(false);
   const [filterData, setFilterData] = useState({
     crop_category: 'Vegetables',
     budget_php: 50000,
@@ -51,6 +52,7 @@ export function HistoryDetailPage() {
 
   useEffect(() => {
     fetchSessionDetails();
+    checkFilteredSessions();
   }, [sessionId]);
 
   const fetchSessionDetails = async () => {
@@ -73,6 +75,29 @@ export function HistoryDetailPage() {
     }
   };
 
+  const checkFilteredSessions = async () => {
+    if (!sessionId) return;
+    
+    try {
+      const userUid = localStorage.getItem('piliseed_user_uid');
+      if (!userUid) {
+        setHasFilteredSessions(false);
+        return;
+      }
+
+      const url = new URL(`${API_BASE_URL}/recommendations/session/${sessionId}/filters`);
+      url.searchParams.append('user_uid', userUid);
+      
+      const response = await fetch(url.toString());
+      if (response.ok) {
+        const data = await response.json();
+        setHasFilteredSessions(data.filtered_sessions?.length > 0);
+      }
+    } catch (err) {
+      setHasFilteredSessions(false);
+    }
+  };
+
   const handleBack = () => {
     navigate('/history');
   };
@@ -86,6 +111,9 @@ export function HistoryDetailPage() {
 
     try {
       setIsFiltering(true);
+      
+      let userUid = localStorage.getItem('piliseed_user_uid');
+      
       const response = await fetch(`${API_BASE_URL}/recommendations/session/${sessionId}/filter`, {
         method: 'POST',
         headers: {
@@ -94,6 +122,7 @@ export function HistoryDetailPage() {
         body: JSON.stringify({
           session_id: sessionId,
           farmer: filterData,
+          user_uid: userUid,
         }),
       });
 
@@ -102,7 +131,12 @@ export function HistoryDetailPage() {
       }
 
       const data = await response.json();
-      // Navigate to the filtered results page
+      
+      if (data.user_uid && !userUid) {
+        localStorage.setItem('piliseed_user_uid', data.user_uid);
+      }
+      
+      setHasFilteredSessions(true);
       navigate(`/history/filter/${data.id}`);
       setShowFilterModal(false);
     } catch (err) {
@@ -174,7 +208,7 @@ export function HistoryDetailPage() {
           </motion.div>
         ) : (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
+            <div className={`grid gap-3 ${hasFilteredSessions ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -205,20 +239,22 @@ export function HistoryDetailPage() {
                 </div>
               </motion.button>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate(`/history/${sessionId}/filters`)}
-                className="bg-white rounded-xl shadow-lg p-3 flex flex-col items-center gap-2 border-2 border-purple-200 hover:border-purple-400 transition-colors"
-              >
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <SproutIcon className="w-4 h-4 text-purple-600" />
-                </div>
-                <div className="text-center">
-                  <div className="text-xs font-semibold text-gray-900">History</div>
-                  <div className="text-[10px] text-gray-500">Results</div>
-                </div>
-              </motion.button>
+              {hasFilteredSessions && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate(`/history/${sessionId}/filters`)}
+                  className="bg-white rounded-xl shadow-lg p-3 flex flex-col items-center gap-2 border-2 border-purple-200 hover:border-purple-400 transition-colors"
+                >
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <SproutIcon className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs font-semibold text-gray-900">History</div>
+                    <div className="text-[10px] text-gray-500">Results</div>
+                  </div>
+                </motion.button>
+              )}
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-4">

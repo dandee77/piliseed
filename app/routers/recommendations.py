@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 from fastapi import APIRouter, HTTPException
 from bson import ObjectId
 from app.models.schemas import (
@@ -21,6 +22,9 @@ from app.core.database import mongodb
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
+
+def generate_user_uid():
+    return str(uuid.uuid4())
 
 @router.get("/{sensor_id}/latest", response_model=RecommendationResponse)
 async def get_latest_recommendations(sensor_id: str):
@@ -654,10 +658,13 @@ async def auto_generate_recommendations(sensor_id: str, sensor_data: HardwareSen
 
 @router.post("/session/{recommendation_id}/filter", response_model=FilterRecommendationResponse)
 async def filter_recommendations(recommendation_id: str, request: FilterRecommendationRequest):
-    """Filter recommendations from a session based on farmer preferences."""
     db = mongodb.get_database()
     recommendations_collection = db["crop_recommendations"]
     context_collection = db["location_analysis"]
+    
+    user_uid = request.user_uid
+    if not user_uid:
+        user_uid = generate_user_uid()
     
     try:
         recommendation_doc = await recommendations_collection.find_one({"_id": ObjectId(recommendation_id)})
@@ -667,24 +674,20 @@ async def filter_recommendations(recommendation_id: str, request: FilterRecommen
     if not recommendation_doc:
         raise HTTPException(status_code=404, detail="Recommendation session not found")
     
-    # Get original recommendations
     output = recommendation_doc.get("data", {}).get("output", {})
     original_recommendations = output.get("recommendations", [])
     
     if not original_recommendations:
         raise HTTPException(status_code=404, detail="No recommendations found in this session")
     
-    # Extract only crop names
     available_crops = [rec.get("crop") for rec in original_recommendations if rec.get("crop")]
     
     if not available_crops:
         raise HTTPException(status_code=404, detail="No valid crop names found")
     
-    # Get context data (check both keys)
     context_data = recommendation_doc.get("data", {}).get("context_data") or recommendation_doc.get("data", {}).get("context", {})
     
     if not context_data:
-        # Try to fetch from context collection
         sensor_id = recommendation_doc.get("data", {}).get("sensor_id")
         if sensor_id:
             existing_context = await context_collection.find_one(
@@ -694,7 +697,6 @@ async def filter_recommendations(recommendation_id: str, request: FilterRecommen
             if existing_context and "data" in existing_context:
                 context_data = existing_context["data"].get("output", {})
     
-    # Prepare input for AI
     farmer_input = request.farmer.dict()
     
     filter_input = {
@@ -728,9 +730,9 @@ async def filter_recommendations(recommendation_id: str, request: FilterRecommen
                     logger.error(f"Failed to fetch image for {searchable_name}: {str(img_error)}")
                     rec["image_url"] = None
         
-        # Save filtered recommendations
         storage_data = {
             "session_id": recommendation_id,
+            "user_uid": user_uid,
             "farmer_input": farmer_input,
             "filter_explanation": filter_explanation,
             "available_crops": available_crops,
@@ -744,6 +746,7 @@ async def filter_recommendations(recommendation_id: str, request: FilterRecommen
         return FilterRecommendationResponse(
             id=document_id,
             session_id=recommendation_id,
+            user_uid=user_uid,
             filter_explanation=filter_explanation,
             farmer_input=request.farmer,
             recommendations=recommendations
@@ -759,16 +762,17 @@ async def filter_recommendations(recommendation_id: str, request: FilterRecommen
         raise HTTPException(status_code=500, detail=f"Failed to filter recommendations: {str(e)}")
 
 @router.get("/session/{session_id}/filters")
-async def get_filtered_sessions(session_id: str):
-    """Get all filtered recommendation sessions for a given original session."""
+async def get_filtered_sessions(session_id: str, user_uid: str = None):
     db = mongodb.get_database()
     filtered_collection = db["filtered_recommendations"]
     
     try:
         filtered_sessions = []
-        cursor = filtered_collection.find(
-            {"data.session_id": session_id}
-        ).sort("timestamp", -1)
+        query = {"data.session_id": session_id}
+        if user_uid:
+            query["data.user_uid"] = user_uid
+        
+        cursor = filtered_collection.find(query).sort("timestamp", -1)
         
         async for doc in cursor:
             data = doc.get("data", {})

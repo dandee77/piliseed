@@ -32,7 +32,13 @@ export function FilteredSessionsPage() {
 
   const fetchFilteredSessions = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/recommendations/session/${sessionId}/filters`);
+      const userUid = localStorage.getItem('piliseed_user_uid');
+      const url = new URL(`${API_BASE_URL}/recommendations/session/${sessionId}/filters`);
+      if (userUid) {
+        url.searchParams.append('user_uid', userUid);
+      }
+      
+      const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error('Failed to fetch filtered sessions');
       }
